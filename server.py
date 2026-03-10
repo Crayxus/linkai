@@ -774,4 +774,5 @@ if __name__ == "__main__":
     print("LinkAI 智能学习系统启动中...")
     print("已加载三科教材：语文 / 数学 / 英语")
     print("访问地址: http://localhost:5055")
-    app.run(host="0.0.0.0", port=5055, debug=True)
+    port = int(os.environ.get("PORT", 5055))
+    app.run(host="0.0.0.0", port=port, debug=False)
