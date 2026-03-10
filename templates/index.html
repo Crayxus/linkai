@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkAI · 五年级下册冲刺第一</title>
+<style>
+:root {
+  --bg:#f5f7ff;--card:#fff;--text:#2c3e50;--light:#8892b0;
+  --purple:#667eea;--purple2:#764ba2;
+  --green:#27ae60;--red:#e74c3c;--orange:#f39c12;--blue:#2980b9;
+  --yuwen:#e74c3c;--shuxue:#2980b9;--yingyu:#27ae60;
+  --shadow:0 4px 20px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── TOP ── */
+.topbar{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:0 20px;height:56px;
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 12px rgba(102,126,234,.4)}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar h1{font-size:17px;font-weight:700;letter-spacing:.5px}
+.streak-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:13px;display:flex;align-items:center;gap:4px}
+.xp-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:13px;display:flex;align-items:center;gap:4px}
+.topbar-right{display:flex;gap:8px}
+.tbtn{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:16px;padding:5px 12px;cursor:pointer;font-size:12px;transition:background .2s}
+.tbtn:hover{background:rgba(255,255,255,.32)}
+
+/* ── LAYOUT ── */
+.layout{display:flex;height:calc(100vh - 56px)}
+
+/* ── SIDEBAR ── */
+.sidebar{width:260px;min-width:260px;background:var(--card);border-right:1px solid #e8ecf0;display:flex;flex-direction:column;overflow:hidden}
+.subject-tabs{display:flex;border-bottom:2px solid #f0f0f0}
+.stab{flex:1;padding:11px 4px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;
+  border-bottom:3px solid transparent;color:var(--light);transition:all .2s;margin-bottom:-2px}
+.stab[data-s="yuwen"].active{color:var(--yuwen);border-bottom-color:var(--yuwen)}
+.stab[data-s="shuxue"].active{color:var(--shuxue);border-bottom-color:var(--shuxue)}
+.stab[data-s="yingyu"].active{color:var(--yingyu);border-bottom-color:var(--yingyu)}
+.unit-list{flex:1;overflow-y:auto;padding:6px 0}
+.unit-hdr{padding:10px 14px 4px;font-size:10px;font-weight:800;color:var(--light);letter-spacing:.8px;text-transform:uppercase}
+.unit-theme{padding:0 14px 6px;font-size:11px;color:#bbb}
+.lesson-row{padding:8px 12px 8px 20px;cursor:pointer;font-size:12.5px;display:flex;align-items:center;gap:7px;
+  transition:background .15s;border-left:3px solid transparent}
+.lesson-row:hover{background:#f5f7ff}
+.lesson-row.active{background:#f0f4ff;border-left-color:var(--purple);color:var(--purple);font-weight:700}
+.lbadge{font-size:10px;padding:1px 5px;border-radius:3px;background:#f0f0f0;color:#888;white-space:nowrap;flex-shrink:0}
+.lbadge.精读{background:#fff3e0;color:#e67e22}.lbadge.新课{background:#e8f5e9;color:#27ae60}
+.lbadge.复习{background:#e8eaf6;color:#5c6bc0}.lbadge.习作{background:#fce4ec;color:#e91e63}
+.lname{flex:1;line-height:1.3}
+.lstars{font-size:11px;color:var(--orange);flex-shrink:0;letter-spacing:-1px}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;position:relative}
+
+/* ── HOME PAGE ── */
+#pg-home{padding:28px 28px 40px}
+.hero-card{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:20px;padding:28px;color:#fff;
+  margin-bottom:24px;display:flex;align-items:center;gap:20px}
+.hero-icon{font-size:56px;flex-shrink:0}
+.hero-text h2{font-size:22px;margin-bottom:6px}
+.hero-text p{opacity:.85;font-size:14px;line-height:1.6}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border-radius:14px;padding:18px 16px;text-align:center;box-shadow:var(--shadow)}
+.stat-card .val{font-size:28px;font-weight:800;margin-bottom:4px}
+.stat-card .lbl{font-size:12px;color:var(--light)}
+.section-hdr{font-size:15px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.plan-card{background:var(--card);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.plan-card h4{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.plan-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f5f5f5;cursor:pointer}
+.plan-item:last-child{border-bottom:none}
+.plan-item:hover .plan-name{color:var(--purple);text-decoration:underline}
+.plan-subj{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.plan-name{font-size:12.5px;flex:1}
+.plan-meta{font-size:11px;color:var(--light)}
+.subj-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.scard{background:var(--card);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;
+  box-shadow:var(--shadow);border-top:4px solid var(--c);transition:transform .2s,box-shadow .2s}
+.scard:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.14)}
+.scard .sicon{font-size:36px;margin-bottom:8px}
+.scard h3{font-size:16px;color:var(--c);margin-bottom:4px}
+.scard .sdesc{font-size:11px;color:var(--light);margin-bottom:10px}
+.prog-bar{height:6px;background:#eee;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--c);border-radius:3px;transition:width .6s}
+
+/* ── LESSON DASHBOARD ── */
+#pg-lesson{display:none;flex-direction:column;height:100%}
+.lesson-hdr{background:var(--card);padding:14px 20px;border-bottom:1px solid #e8ecf0;
+  display:flex;align-items:center;gap:12px}
+.back-btn{background:none;border:none;font-size:20px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background .2s}
+.back-btn:hover{background:#f0f0f0}
+.lesson-hdr-info{flex:1}
+.lesson-hdr-title{font-size:17px;font-weight:800}
+.lesson-hdr-sub{font-size:12px;color:var(--light);margin-top:2px}
+.lesson-stars-big{font-size:20px;color:var(--orange)}
+.lesson-body{flex:1;overflow-y:auto;padding:20px}
+.lesson-menu-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.menu-card{background:var(--card);border-radius:16px;padding:22px 18px;cursor:pointer;
+  box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;border:2px solid transparent;text-align:center}
+.menu-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.14);border-color:var(--purple)}
+.menu-card .micon{font-size:40px;margin-bottom:10px}
+.menu-card h3{font-size:15px;margin-bottom:5px}
+.menu-card p{font-size:12px;color:var(--light)}
+.menu-card.primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff}
+.menu-card.primary p{opacity:.85}
+.kp-box{background:#f0f4ff;border-radius:12px;padding:16px;border:1px solid #e0e7ff;margin-bottom:14px}
+.kp-box h4{font-size:13px;color:var(--purple);margin-bottom:10px}
+.kp-list{list-style:none}
+.kp-list li{font-size:13px;padding:4px 0;display:flex;align-items:flex-start;gap:7px}
+.kp-list li::before{content:"✦";color:var(--purple);font-size:10px;margin-top:4px;flex-shrink:0}
+
+/* ── LEARN TAB ── */
+#pg-learn{display:none;flex-direction:column;height:100%}
+.learn-hdr{background:var(--card);padding:12px 20px;border-bottom:1px solid #e8ecf0;
+  display:flex;align-items:center;gap:12px}
+.learn-body{flex:1;overflow-y:auto;padding:20px}
+.explain-box{background:var(--card);border-radius:14px;padding:22px;box-shadow:var(--shadow);
+  line-height:1.9;font-size:14px;white-space:pre-wrap;min-height:100px}
+.explain-loading{color:var(--light);text-align:center;padding:40px}
+.tts-bar{margin-top:12px;display:flex;align-items:center;gap:10px}
+.tts-btn{background:linear-gradient(135deg,#11998e,#38ef7d);border:none;color:#fff;
+  padding:8px 20px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+.tts-btn:hover{opacity:.88}
+.tts-btn.speaking{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+
+/* ── CHALLENGE MODE ── */
+#pg-challenge{display:none;flex-direction:column;height:100%;background:var(--bg)}
+.chal-top{background:var(--card);padding:14px 20px;border-bottom:1px solid #e8ecf0;
+  display:flex;align-items:center;gap:14px}
+.chal-progress-wrap{flex:1}
+.chal-progress-bar{height:12px;background:#e8ecf0;border-radius:6px;overflow:hidden}
+.chal-progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--purple2));
+  border-radius:6px;transition:width .4s cubic-bezier(.34,1.56,.64,1)}
+.chal-counter{font-size:13px;color:var(--light);margin-top:4px;text-align:right}
+.hearts{display:flex;gap:4px;font-size:20px;flex-shrink:0}
+
+.chal-body{flex:1;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px 20px}
+.q-card{background:var(--card);border-radius:20px;padding:28px;box-shadow:var(--shadow);width:100%;max-width:680px}
+.q-label{font-size:12px;color:var(--light);margin-bottom:10px;font-weight:600}
+.q-text-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:22px}
+.q-text{font-size:17px;font-weight:700;line-height:1.6;color:var(--text);flex:1}
+.q-tts-btn{flex-shrink:0;background:none;border:2px solid #e0e0e0;border-radius:50%;width:36px;height:36px;font-size:16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.q-tts-btn:hover{border-color:var(--purple);background:#f5f7ff}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{padding:14px 18px;border:2.5px solid #e8ecf0;border-radius:14px;cursor:pointer;font-size:14px;
+  display:flex;align-items:center;gap:12px;transition:all .2s;background:var(--card);text-align:left;width:100%}
+.opt:hover:not(:disabled){border-color:var(--purple);background:#f5f7ff;transform:translateX(3px)}
+.opt .opt-key{width:28px;height:28px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;transition:all .2s}
+.opt.correct{border-color:var(--green)!important;background:#e8f5e9!important}
+.opt.correct .opt-key{background:var(--green);color:#fff}
+.opt.wrong{border-color:var(--red)!important;background:#fdecea!important}
+.opt.wrong .opt-key{background:var(--red);color:#fff}
+.opt.disabled{cursor:default}
+.fill-input{width:100%;border:2.5px solid #e8ecf0;border-radius:12px;padding:13px 16px;
+  font-size:15px;outline:none;font-family:inherit;transition:border-color .2s}
+.fill-input:focus{border-color:var(--purple)}
+.fill-input.correct{border-color:var(--green);background:#e8f5e9}
+.fill-input.wrong{border-color:var(--red);background:#fdecea}
+.qa-area{width:100%;border:2.5px solid #e8ecf0;border-radius:12px;padding:13px 16px;
+  font-size:14px;outline:none;font-family:inherit;resize:vertical;min-height:90px;transition:border-color .2s}
+.qa-area:focus{border-color:var(--purple)}
+.submit-btn{margin-top:16px;width:100%;padding:14px;background:linear-gradient(135deg,var(--purple),var(--purple2));
+  border:none;color:#fff;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
+.submit-btn:hover{opacity:.9}
+
+/* ── FEEDBACK PANEL ── */
+.feedback{margin-top:16px;border-radius:14px;padding:16px 18px;display:none}
+.feedback.show{display:block;animation:slideUp .3s ease}
+.feedback.correct-fb{background:#e8f5e9;border-left:5px solid var(--green)}
+.feedback.wrong-fb{background:#fdecea;border-left:5px solid var(--red)}
+.feedback .fb-title{font-size:15px;font-weight:800;margin-bottom:6px}
+.feedback.correct-fb .fb-title{color:var(--green)}
+.feedback.wrong-fb .fb-title{color:var(--red)}
+.feedback .fb-exp{font-size:13px;color:var(--text);line-height:1.7}
+.next-btn{margin-top:14px;padding:12px 32px;background:var(--green);border:none;color:#fff;
+  border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;width:100%}
+.next-btn:hover{opacity:.9}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── RESULT PAGE ── */
+#pg-result{display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 20px;background:var(--bg);min-height:100%}
+.result-card{background:var(--card);border-radius:24px;padding:36px 32px;text-align:center;
+  box-shadow:var(--shadow);max-width:480px;width:100%}
+.result-emoji{font-size:70px;margin-bottom:12px;display:block}
+.result-score{font-size:48px;font-weight:900;margin-bottom:4px}
+.result-score.perfect{color:var(--green)}
+.result-score.good{color:var(--orange)}
+.result-score.poor{color:var(--red)}
+.result-label{font-size:16px;color:var(--light);margin-bottom:20px}
+.result-stars{font-size:36px;letter-spacing:6px;margin-bottom:16px;display:block}
+.xp-gained{background:linear-gradient(135deg,#f39c12,#e67e22);color:#fff;border-radius:20px;
+  padding:8px 20px;font-size:15px;font-weight:700;display:inline-block;margin-bottom:20px;
+  animation:popIn .4s ease}
+@keyframes popIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.result-mistakes{text-align:left;margin-top:16px;margin-bottom:20px;display:none}
+.result-mistakes h4{font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px}
+.mistake-item{background:#fdecea;border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px}
+.mistake-item .mq{margin-bottom:3px;font-weight:600}
+.mistake-item .ma{color:var(--red)}.mistake-item .mca{color:var(--green)}
+.result-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.rbtn{padding:11px 24px;border-radius:20px;border:none;cursor:pointer;font-size:14px;font-weight:700;transition:all .2s}
+.rbtn.primary{background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff}
+.rbtn.secondary{background:#f0f0f0;color:var(--text)}
+.rbtn:hover{transform:scale(1.04)}
+
+/* ── CHAT PAGE ── */
+#pg-chat{display:none;flex-direction:column;height:100%}
+.chat-hdr{background:var(--card);padding:12px 20px;border-bottom:1px solid #e8ecf0;display:flex;align-items:center;gap:12px}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;gap:10px;max-width:88%}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg-av{width:34px;height:34px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.msg.ai .msg-av{background:linear-gradient(135deg,var(--purple),var(--purple2))}
+.msg.user .msg-av{background:linear-gradient(135deg,#f093fb,#f5576c)}
+.msg-bub{padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.msg.ai .msg-bub{background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.07);border-radius:4px 16px 16px 16px}
+.msg.user .msg-bub{background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff;border-radius:16px 4px 16px 16px}
+.chat-speak-btn{background:none;border:none;cursor:pointer;font-size:13px;opacity:.45;padding:2px 4px;align-self:flex-end;transition:opacity .2s}
+.chat-speak-btn:hover{opacity:.9}
+.typing span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ccc;margin:0 2px;animation:bounce .8s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+.chat-quick{padding:8px 14px;display:flex;gap:7px;flex-wrap:wrap;background:var(--card);border-top:1px solid #f0f0f0}
+.qbtn{background:#f0f4ff;border:1px solid #e0e7ff;border-radius:14px;padding:5px 11px;
+  font-size:12px;cursor:pointer;color:var(--purple);transition:background .2s;white-space:nowrap}
+.qbtn:hover{background:#e0e7ff}
+.chat-input-row{padding:10px 14px;background:var(--card);border-top:1px solid #e8ecf0;display:flex;gap:9px;align-items:flex-end}
+.chat-ta{flex:1;border:1.5px solid #e0e7ff;border-radius:18px;padding:9px 14px;font-size:13px;
+  resize:none;max-height:90px;outline:none;font-family:inherit;transition:border-color .2s}
+.chat-ta:focus{border-color:var(--purple)}
+.chat-send{background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;
+  border-radius:50%;width:38px;height:38px;cursor:pointer;color:#fff;font-size:16px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
+.chat-send:hover{transform:scale(1.1)}.chat-send:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── EXAM PAGE ── */
+#pg-exam{display:none;flex-direction:column;height:100%}
+.exam-hdr{background:var(--card);padding:12px 20px;border-bottom:1px solid #e8ecf0;display:flex;align-items:center;gap:12px}
+.exam-body{flex:1;overflow-y:auto;padding:20px}
+.exam-setup{text-align:center;padding:32px 20px}
+.exam-type-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:380px;margin:20px auto 24px}
+.etcard{background:var(--card);border:2.5px solid #e8ecf0;border-radius:16px;padding:22px;cursor:pointer;
+  text-align:center;transition:all .2s}
+.etcard:hover,.etcard.sel{border-color:var(--purple);background:#f0f4ff}
+.etcard .eicon{font-size:34px;margin-bottom:8px}
+.etcard h4{font-size:15px;margin-bottom:4px}
+.etcard p{font-size:11px;color:var(--light)}
+.eq-card{background:var(--card);border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.eq-num{font-size:11px;color:var(--light);margin-bottom:7px;font-weight:600}
+.eq-text{font-size:14px;font-weight:700;margin-bottom:14px;line-height:1.6}
+.eq-exp{margin-top:10px;padding:10px 12px;background:#fffde7;border-radius:8px;font-size:12.5px;
+  color:#795548;border-left:3px solid var(--orange);display:none}
+.eq-exp.show{display:block}
+.eq-result{display:inline-block;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:700;margin-left:6px}
+.eq-result.c{background:#e8f5e9;color:var(--green)}.eq-result.w{background:#fdecea;color:var(--red)}
+
+/* ── WRONG BOOK ── */
+#pg-wrong{display:none;padding:20px}
+.wrong-section{margin-bottom:20px}
+.wrong-section h4{font-size:14px;font-weight:700;margin-bottom:10px}
+.wcard{background:var(--card);border-radius:10px;padding:14px;margin-bottom:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:4px solid var(--red)}
+.wcard .wq{font-size:13px;margin-bottom:5px;font-weight:600}
+.wcard .wa{font-size:12px;color:var(--red)}.wcard .wca{font-size:12px;color:var(--green);margin-top:2px}
+.wdel{float:right;background:none;border:none;cursor:pointer;color:#ddd;font-size:15px;transition:color .2s}
+.wdel:hover{color:var(--red)}
+
+/* ── MODAL ── */
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.modal-wrap.show{display:flex}
+.modal{background:var(--card);border-radius:18px;padding:26px;width:420px;max-width:94vw;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h3{font-size:17px;margin-bottom:18px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:var(--light)}
+.form-group input,.form-group select{width:100%;border:1.5px solid #e8ecf0;border-radius:8px;
+  padding:9px 12px;font-size:13px;outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--purple)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.btn-prim{background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;color:#fff;
+  padding:9px 22px;border-radius:16px;cursor:pointer;font-size:13px;font-weight:700}
+.btn-sec{background:#f0f0f0;border:none;color:var(--text);padding:9px 18px;border-radius:16px;cursor:pointer;font-size:13px}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:40px;color:var(--light)}
+.empty .ei{font-size:44px;margin-bottom:10px}
+.loading-spin{font-size:28px;animation:spin 1s linear infinite;display:block;margin-bottom:10px}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.big-btn{padding:14px 36px;background:linear-gradient(135deg,var(--purple),var(--purple2));
+  border:none;color:#fff;border-radius:18px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.big-btn:hover{transform:scale(1.04);box-shadow:0 6px 20px rgba(102,126,234,.5)}
+
+/* Celebration overlay */
+.celebrate{position:fixed;inset:0;pointer-events:none;z-index:999;display:flex;align-items:center;justify-content:center;display:none}
+.celebrate.show{display:flex;animation:fadeOut 2.5s ease forwards}
+.celebrate-text{font-size:60px;animation:bounceIn .4s ease}
+@keyframes fadeOut{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
+@keyframes bounceIn{from{transform:scale(.3)}60%{transform:scale(1.15)}to{transform:scale(1)}}
+
+/* ── READINESS DASHBOARD ── */
+.score-card-big{border-radius:16px;padding:20px 18px;text-align:center;border:2px solid transparent;cursor:pointer;transition:all .2s;background:var(--card);box-shadow:var(--shadow)}
+.score-card-big:hover{transform:translateY(-3px)}
+.score-num{font-size:52px;font-weight:900;line-height:1}
+.score-lbl{font-size:13px;margin-top:6px;font-weight:600}
+.score-gap{font-size:11px;margin-top:4px}
+.kp-bar-row{margin-bottom:9px}
+.kp-bar-row .kp-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.kp-bar-wrap{height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden}
+.kp-bar-fill{height:100%;border-radius:4px;transition:width .6s}
+.readiness-subj-card{background:var(--card);border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.readiness-subj-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.drill-btn{border:none;color:#fff;border-radius:16px;padding:7px 16px;cursor:pointer;font-size:12px;font-weight:700;transition:all .2s}
+.drill-btn:hover{opacity:.85;transform:scale(1.04)}
+.pred-score-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:600px){.pred-score-row{grid-template-columns:1fr}}
+.overall-band{border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;color:#fff}
+.band-icon{font-size:36px}
+.band-score{font-size:28px;font-weight:900}
+.band-msg{font-size:13px;opacity:.9}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>🎓 LinkAI冲刺第一</h1>
+    <div class="streak-badge" id="streak-badge">🔥 <span id="streak-num">0</span>天</div>
+    <div class="xp-badge" id="xp-badge">⚡ <span id="xp-num">0</span> XP</div>
+  </div>
+  <div class="topbar-right">
+    <button class="tbtn" onclick="showPage('home')">🏠</button>
+    <button class="tbtn" onclick="showReadiness()" style="background:rgba(255,200,0,.25);font-weight:700">📊 成绩</button>
+    <button class="tbtn" onclick="showPage('wrong')">📕 错题</button>
+    <button class="tbtn" onclick="showModal('settings')">⚙️</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="subject-tabs">
+      <div class="stab active" data-s="yuwen" onclick="switchSubject('yuwen')">📖 语文</div>
+      <div class="stab" data-s="shuxue" onclick="switchSubject('shuxue')">🔢 数学</div>
+      <div class="stab" data-s="yingyu" onclick="switchSubject('yingyu')">🌍 英语</div>
+    </div>
+    <div class="unit-list" id="unit-list"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main-area">
+
+    <!-- HOME -->
+    <div id="pg-home" style="display:block">
+      <div id="pg-home-inner"></div>
+    </div>
+
+    <!-- LESSON DASHBOARD -->
+    <div id="pg-lesson" style="display:none;flex-direction:column;height:100%">
+      <div class="lesson-hdr">
+        <button class="back-btn" onclick="showPage('home')">←</button>
+        <div class="lesson-hdr-info">
+          <div class="lesson-hdr-title" id="ld-title"></div>
+          <div class="lesson-hdr-sub" id="ld-sub"></div>
+        </div>
+        <div class="lesson-stars-big" id="ld-stars"></div>
+      </div>
+      <div class="lesson-body" id="lesson-body"></div>
+    </div>
+
+    <!-- LEARN -->
+    <div id="pg-learn" style="display:none;flex-direction:column;height:100%">
+      <div class="learn-hdr">
+        <button class="back-btn" onclick="backToLesson()">←</button>
+        <span id="learn-title" style="font-weight:700;font-size:15px"></span>
+        <span style="margin-left:auto;font-size:12px;color:var(--light)">📖 AI讲解</span>
+      </div>
+      <div class="learn-body">
+        <div class="kp-box" id="learn-kp"></div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="tbtn" style="background:var(--purple);padding:8px 16px;border-radius:16px" onclick="doExplain('basic')">💡 简洁讲解</button>
+          <button class="tbtn" style="background:var(--purple);padding:8px 16px;border-radius:16px" onclick="doExplain('detail')">📚 详细讲解</button>
+        </div>
+        <div class="explain-box" id="explain-box"><span class="empty" style="padding:20px">点击上方按钮，AI老师来讲解这节课的知识点 👆</span></div>
+        <div class="tts-bar" id="tts-bar" style="display:none">
+          <button class="tts-btn" id="tts-btn" onclick="ttsToggle()">🔊 朗读内容</button>
+          <span style="font-size:12px;color:var(--light)">🎤 云溪音色</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHALLENGE -->
+    <div id="pg-challenge" style="display:none;flex-direction:column;height:100%">
+      <div class="chal-top">
+        <button class="back-btn" onclick="exitChallenge()">✕</button>
+        <div class="chal-progress-wrap">
+          <div class="chal-progress-bar"><div class="chal-progress-fill" id="chal-prog" style="width:0%"></div></div>
+          <div class="chal-counter" id="chal-counter">0 / 8</div>
+        </div>
+        <div class="hearts" id="hearts-display">❤️❤️❤️</div>
+      </div>
+      <div class="chal-body">
+        <div class="q-card" id="q-card">
+          <!-- question rendered here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULT -->
+    <div id="pg-result" style="display:none;overflow-y:auto;padding:28px 20px">
+      <div class="result-card" id="result-card"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="pg-chat" style="display:none;flex-direction:column;height:100%">
+      <div class="chat-hdr">
+        <button class="back-btn" onclick="backToLesson()">←</button>
+        <span id="chat-lesson-title" style="font-weight:700;font-size:15px"></span>
+        <span style="margin-left:auto;font-size:12px;color:var(--light)">🤖 问AI老师</span>
+      </div>
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg ai"><div class="msg-av">🤖</div><div class="msg-bub">你好！我是AI老师 😊 有任何问题都可以问我！</div></div>
+      </div>
+      <div class="chat-quick" id="chat-quick"></div>
+      <div class="chat-input-row">
+        <textarea class="chat-ta" id="chat-ta" rows="1" placeholder="输入问题..." onkeydown="chatKey(event)"></textarea>
+        <button class="chat-send" id="chat-send" onclick="sendChat()">➤</button>
+      </div>
+    </div>
+
+    <!-- EXAM -->
+    <div id="pg-exam" style="display:none;flex-direction:column;height:100%">
+      <div class="exam-hdr">
+        <button class="back-btn" onclick="backToLesson()">←</button>
+        <span id="exam-title" style="font-weight:700;font-size:15px"></span>
+        <span style="margin-left:auto;font-size:12px;color:var(--light)">📝 模拟考试</span>
+      </div>
+      <div class="exam-body" id="exam-body">
+        <div class="exam-setup">
+          <div style="font-size:40px;margin-bottom:10px">📝</div>
+          <h3 style="font-size:20px;margin-bottom:6px">模拟考试</h3>
+          <p style="color:var(--light);margin-bottom:20px;font-size:14px">AI出一套完整模拟卷，提前体验考试</p>
+          <div class="exam-type-row">
+            <div class="etcard sel" id="et-mid" onclick="selExamType('midterm')">
+              <div class="eicon">📋</div><h4>期中模拟</h4><p>上半学期重点</p>
+            </div>
+            <div class="etcard" id="et-fin" onclick="selExamType('final')">
+              <div class="eicon">🏆</div><h4>期末模拟</h4><p>全册综合考查</p>
+            </div>
+          </div>
+          <button class="big-btn" onclick="genExam()">🚀 开始出卷</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- WRONG BOOK -->
+    <div id="pg-wrong" style="display:none">
+      <div style="padding:20px">
+        <div style="font-size:16px;font-weight:800;margin-bottom:16px">📕 错题本</div>
+        <div id="wrong-content"></div>
+      </div>
+    </div>
+
+    <!-- EXAM READINESS DASHBOARD -->
+    <div id="pg-readiness" style="display:none;flex-direction:column;height:100%;overflow-y:auto">
+      <div class="exam-hdr">
+        <button class="back-btn" onclick="showPage('home')">← 返回</button>
+        <span style="font-weight:700;font-size:15px">📊 考试实力 · 隐藏分数</span>
+      </div>
+      <div id="readiness-body" style="padding:20px 24px 40px">
+        <div class="explain-loading">加载中...</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- CELEBRATE OVERLAY -->
+<div class="celebrate" id="celebrate"><span class="celebrate-text" id="celebrate-text"></span></div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-wrap" id="modal-settings">
+  <div class="modal">
+    <h3>⚙️ 设置</h3>
+    <div class="form-group"><label>Doubao API Key</label>
+      <input type="password" id="cfg-key" placeholder="已内置，无需填写"></div>
+    <div class="form-group"><label>模型</label>
+      <select id="cfg-model">
+        <option value="ep-m-20260302154635-vgxz5">doubao-1-5-vision-pro-32k（当前）</option>
+        <option value="doubao-1-5-pro-32k-250115">doubao-1-5-pro-32k</option>
+      </select></div>
+    <div class="modal-actions">
+      <button class="btn-sec" onclick="closeModal('settings')">取消</button>
+      <button class="btn-prim" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+{% raw %}
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+let curriculum = {};
+let mastery = {};       // lesson_id → {stars, best_score, ...}
+let userStats = {};     // total_xp, streak_days, today_xp
+let progress = {};
+let readinessData = {}; // subject → {predicted_score, avg_mastery, weak_kps, ...}
+let currentSubject = "yuwen";
+let currentLesson = null;
+let currentUnit = null;
+let chatHistory = [];
+let examType = "midterm";
+let apiKey = localStorage.getItem("linkai_key") || "";
+
+// Challenge state
+let chal = { questions:[], current:0, hearts:3, results:[], lessonId:"", lessonName:"", subject:"" };
+
+const SUBJ_COLOR = {yuwen:"#e74c3c", shuxue:"#2980b9", yingyu:"#27ae60"};
+const SUBJ_NAME  = {yuwen:"语文", shuxue:"数学", yingyu:"英语"};
+const SUBJ_ICON  = {yuwen:"📖", shuxue:"🔢", yingyu:"🌍"};
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+async function init() {
+  const [cr, st, pr] = await Promise.all([
+    fetch("/api/curriculum").then(r=>r.json()),
+    fetch("/api/stats").then(r=>r.json()),
+    fetch("/api/progress").then(r=>r.json()),
+  ]);
+  curriculum = cr;
+  mastery = st.mastery || {};
+  userStats = st.stats || {};
+  pr.forEach(r => progress[r.lesson_id] = r);
+  updateTopbar();
+  renderSidebar("yuwen");
+  renderHome();
+  // 后台加载实力数据（不阻塞首页）
+  fetch("/api/exam_readiness").then(r=>r.json()).then(d => {
+    readinessData = d;
+    _injectHomeScores();
+  }).catch(()=>{});
+}
+
+function updateTopbar() {
+  document.getElementById("streak-num").textContent = userStats.streak_days || 0;
+  document.getElementById("xp-num").textContent = userStats.total_xp || 0;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════════════════════════
+function renderSidebar(subj) {
+  currentSubject = subj;
+  document.querySelectorAll(".stab").forEach(t => t.classList.toggle("active", t.dataset.s === subj));
+  const c = curriculum[subj];
+  if (!c) return;
+  let html = "";
+  c.units.forEach(unit => {
+    html += `<div class="unit-hdr">${unit.name}</div>`;
+    if (unit.theme) html += `<div class="unit-theme">${unit.theme}</div>`;
+    unit.lessons.forEach(lesson => {
+      const m = mastery[lesson.id];
+      const s = m ? m.stars : 0;
+      const stars = "★".repeat(s) + "☆".repeat(3-s);
+      const active = currentLesson?.id === lesson.id ? "active" : "";
+      html += `<div class="lesson-row ${active}" onclick="openLesson('${subj}','${unit.id}','${lesson.id}')">
+        <span class="lbadge ${lesson.type||''}">${lesson.type||"课文"}</span>
+        <span class="lname">${lesson.name}</span>
+        <span class="lstars">${stars}</span>
+      </div>`;
+    });
+  });
+  document.getElementById("unit-list").innerHTML = html;
+}
+
+function switchSubject(s) { ttsStop(); renderSidebar(s); }
+
+function findLesson(subj, lid) {
+  for (const unit of curriculum[subj]?.units || []) {
+    for (const l of unit.lessons) {
+      if (l.id === lid) return {lesson:l, unit};
+    }
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// HOME PAGE
+// ══════════════════════════════════════════════════════════════
+async function renderHome() {
+  const plan = await fetch("/api/daily_plan").then(r=>r.json());
+  const today_xp = userStats.today_xp || 0;
+  const goal = 100;
+  const pct = Math.min(100, Math.round(today_xp/goal*100));
+
+  // Subject progress
+  const subjProg = {};
+  ["yuwen","shuxue","yingyu"].forEach(s => {
+    let total=0, done=0;
+    (curriculum[s]?.units||[]).forEach(u => u.lessons.forEach(l => {
+      total++;
+      if (mastery[l.id]?.stars >= 1) done++;
+    }));
+    subjProg[s] = total ? Math.round(done/total*100) : 0;
+  });
+
+  let newHtml = plan.new.map(l => `
+    <div class="plan-item" onclick="openLesson('${l.subject}','','^${l.lesson_id}')">
+      <div class="plan-subj" style="background:${SUBJ_COLOR[l.subject]}22">${SUBJ_ICON[l.subject]}</div>
+      <span class="plan-name">${l.name}</span>
+      <span class="plan-meta">${l.subject_name}</span>
+    </div>`).join("") || '<div style="padding:10px;font-size:12px;color:#aaa">全部学完了！棒棒的 🎉</div>';
+
+  let revHtml = plan.review.map(l => `
+    <div class="plan-item" onclick="openLesson('${l.subject}','','^${l.lesson_id}')">
+      <div class="plan-subj" style="background:${SUBJ_COLOR[l.subject]}22">${SUBJ_ICON[l.subject]}</div>
+      <span class="plan-name">${l.name}</span>
+      <span class="plan-meta">${"★".repeat(l.stars||0)}</span>
+    </div>`).join("") || '<div style="padding:10px;font-size:12px;color:#aaa">暂无需要复习的内容 ✅</div>';
+
+  document.getElementById("pg-home-inner").innerHTML = `
+    <div id="pg-home" style="padding:24px 24px 40px">
+      <div class="hero-card">
+        <div class="hero-icon">🏆</div>
+        <div class="hero-text">
+          <h2>冲刺期中期末第一！</h2>
+          <p>今日已得 <strong>${today_xp}</strong> XP &nbsp;·&nbsp; 目标 ${goal} XP<br>
+          <div style="height:8px;background:rgba(255,255,255,.3);border-radius:4px;margin-top:6px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:#fff;border-radius:4px;transition:width .5s"></div>
+          </div></p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card"><div class="val" style="color:#e74c3c">🔥${userStats.streak_days||0}</div><div class="lbl">连续学习天数</div></div>
+        <div class="stat-card"><div class="val" style="color:#f39c12">⚡${userStats.total_xp||0}</div><div class="lbl">累计XP</div></div>
+        <div class="stat-card"><div class="val" style="color:#27ae60">${Object.values(mastery).filter(m=>m.stars>=3).length}</div><div class="lbl">已掌握课程</div></div>
+      </div>
+
+      <div class="plan-grid">
+        <div class="plan-card">
+          <h4>📚 今日新课 <span style="color:var(--light);font-weight:normal;font-size:11px">（${plan.total_new}课待学）</span></h4>
+          ${newHtml}
+        </div>
+        <div class="plan-card">
+          <h4>🔄 今日复习 <span style="color:var(--light);font-weight:normal;font-size:11px">（${plan.total_review}课到期）</span></h4>
+          ${revHtml}
+        </div>
+      </div>
+
+      <div id="home-readiness-section"></div>
+
+      <div class="section-hdr">📊 三科进度</div>
+      <div class="subj-cards">
+        <div class="scard" style="--c:var(--yuwen)" onclick="switchSubject('yuwen')">
+          <div class="sicon">📖</div><h3>语文</h3>
+          <div class="sdesc">8单元 · 人教版</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${subjProg.yuwen}%"></div></div>
+          <div style="font-size:11px;color:var(--light);margin-top:4px">${subjProg.yuwen}% 已掌握</div>
+        </div>
+        <div class="scard" style="--c:var(--shuxue)" onclick="switchSubject('shuxue')">
+          <div class="sicon">🔢</div><h3>数学</h3>
+          <div class="sdesc">9单元 · 分数几何统计</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${subjProg.shuxue}%"></div></div>
+          <div style="font-size:11px;color:var(--light);margin-top:4px">${subjProg.shuxue}% 已掌握</div>
+        </div>
+        <div class="scard" style="--c:var(--yingyu)" onclick="switchSubject('yingyu')">
+          <div class="sicon">🌍</div><h3>英语</h3>
+          <div class="sdesc">6单元 · PEP版</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${subjProg.yingyu}%"></div></div>
+          <div style="font-size:11px;color:var(--light);margin-top:4px">${subjProg.yingyu}% 已掌握</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// LESSON DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function openLesson(subj, unitId, lessonId) {
+  // Support shorthand ^lessonId
+  if (lessonId.startsWith("^")) lessonId = lessonId.slice(1);
+  const found = findLesson(subj, lessonId);
+  if (!found) { renderSidebar(subj); return; }
+  currentLesson = found.lesson;
+  currentUnit = found.unit;
+  currentSubject = subj;
+  renderSidebar(subj);
+
+  const m = mastery[lessonId];
+  const stars = m ? m.stars : 0;
+  document.getElementById("ld-title").textContent = found.lesson.name;
+  document.getElementById("ld-sub").textContent = found.unit.name + " · " + SUBJ_NAME[subj];
+  document.getElementById("ld-stars").textContent = "★".repeat(stars) + "☆".repeat(3-stars);
+
+  const kps = found.lesson.key_points || [];
+  const kpHtml = kps.map(k=>`<li>${k}</li>`).join("");
+
+  const starsLabel = ["还没开始","初步了解","比较熟悉","完全掌握"][stars];
+  const starColor = ["#aaa","#f39c12","#e67e22","#27ae60"][stars];
+
+  document.getElementById("lesson-body").innerHTML = `
+    <div class="kp-box" style="margin-bottom:16px">
+      <h4>🎯 本课学习目标</h4>
+      <ul class="kp-list">${kpHtml}</ul>
+    </div>
+    <div style="background:#fff8e1;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;border-left:4px solid var(--orange)">
+      当前掌握度：<strong style="color:${starColor}">${"★".repeat(stars)+"☆".repeat(3-stars)} ${starsLabel}</strong>
+      ${stars<3 ? ' &nbsp;→&nbsp; 完成闯关可以升星！' : ' 🎉 已完全掌握！'}
+    </div>
+    <div class="lesson-menu-cards">
+      <div class="menu-card primary" onclick="startChallenge()">
+        <div class="micon">🎮</div>
+        <h3>开始闯关</h3>
+        <p>8道题逐题闯关，答对升星</p>
+      </div>
+      <div class="menu-card" onclick="showLearn()">
+        <div class="micon">📖</div>
+        <h3>AI讲解</h3>
+        <p>先听老师讲，再去闯关</p>
+      </div>
+      <div class="menu-card" onclick="showChat()">
+        <div class="micon">🤖</div>
+        <h3>问AI老师</h3>
+        <p>不懂的地方随时问</p>
+      </div>
+      <div class="menu-card" onclick="showExam()">
+        <div class="micon">📝</div>
+        <h3>模拟考试</h3>
+        <p>完整期中/期末模拟卷</p>
+      </div>
+      <div class="menu-card" onclick="startLessonTargetedDrill()" style="border:2px solid #f39c12;background:#fffbf0">
+        <div class="micon">⚡</div>
+        <h3>薄弱突破</h3>
+        <p>针对本课知识点专项强化</p>
+      </div>
+    </div>`;
+
+  showPage("lesson");
+}
+
+function backToLesson() {
+  if (currentLesson) showPage("lesson");
+  else showPage("home");
+}
+
+// ══════════════════════════════════════════════════════════════
+// LEARN
+// ══════════════════════════════════════════════════════════════
+function showLearn() {
+  document.getElementById("learn-title").textContent = currentLesson?.name || "";
+  const kps = currentLesson?.key_points || [];
+  document.getElementById("learn-kp").innerHTML = `<h4>🎯 知识点</h4><ul class="kp-list">${kps.map(k=>`<li>${k}</li>`).join("")}</ul>`;
+  document.getElementById("explain-box").innerHTML = '<span class="empty" style="padding:20px">点击上方按钮，AI老师来讲解 👆</span>';
+  document.getElementById("tts-bar").style.display = "none";
+  showPage("learn");
+}
+
+async function doExplain(level) {
+  const box = document.getElementById("explain-box");
+  box.innerHTML = '<div class="explain-loading"><span class="loading-spin">⚙️</span>AI老师准备讲解中...</div>';
+  document.getElementById("tts-bar").style.display = "none";
+  try {
+    const r = await fetch("/api/explain", {
+      method:"POST", headers:{"Content-Type":"application/json","X-API-Key":apiKey},
+      body: JSON.stringify({subject:currentSubject, topic:currentLesson.name+(currentLesson.key_points?" - "+currentLesson.key_points.join("，"):""), level})
+    });
+    const d = await r.json();
+    box.textContent = d.content || d.error || "讲解失败";
+    if (d.content) {
+      document.getElementById("tts-bar").style.display = "flex";
+      const btn = document.getElementById("tts-btn");
+      btn.classList.remove("speaking"); btn.textContent = "🔊 朗读内容";
+    }
+  } catch(e) { box.textContent = "请求失败：" + e.message; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TTS (edge-tts 后端)
+// ══════════════════════════════════════════════════════════════
+let _audio = null, _ttsActive = false;
+
+function ttsStop() {
+  if (_audio) { _audio.pause(); _audio.src=""; _audio=null; }
+  _ttsActive = false;
+  const btn = document.getElementById("tts-btn");
+  if (btn) { btn.classList.remove("speaking"); btn.textContent = "🔊 朗读内容"; }
+}
+
+async function ttsToggle() {
+  if (_ttsActive && _audio && !_audio.paused) { ttsStop(); return; }
+  const text = document.getElementById("explain-box")?.textContent;
+  if (!text || text.length < 5) return;
+  const btn = document.getElementById("tts-btn");
+  btn.textContent = "⏳ 生成中..."; btn.classList.add("speaking");
+  try {
+    const r = await fetch("/api/tts", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:text.slice(0,3000)})});
+    if (!r.ok) throw new Error("TTS失败");
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    _audio = new Audio(url);
+    _ttsActive = true;
+    _audio.onplay = () => { btn.classList.add("speaking"); btn.textContent = "⏹ 停止朗读"; };
+    _audio.onended = _audio.onerror = () => { ttsStop(); URL.revokeObjectURL(url); };
+    _audio.play();
+  } catch(e) { ttsStop(); console.error(e); }
+}
+
+function _cleanTtsText(text) {
+  // 去掉书名号（TTS会念"书名号左/右"）
+  text = text.replace(/《/g, '').replace(/》/g, '');
+  // 去掉markdown
+  text = text.replace(/###?\s*/g, '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1').replace(/`(.+?)`/g, '$1');
+  // 下划线填空变停顿
+  text = text.replace(/_+/g, '，');
+  return text.trim();
+}
+
+async function ttsSpeakText(text, btn) {
+  // 如果正在播同一内容则停止，否则停旧的开新的
+  if (_ttsActive && _audio && !_audio.paused) { ttsStop(); }
+  if (!text || text.length < 2) return;
+  const cleanText = _cleanTtsText(text);
+  if (!cleanText) return;
+  if (btn) { btn.textContent = "⏳"; }
+  try {
+    const r = await fetch("/api/tts", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:cleanText.slice(0,1000)})});
+    if (!r.ok) { if(btn) btn.textContent="🔊"; return; }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    if (_audio) { _audio.pause(); _audio.src=""; }
+    _audio = new Audio(url);
+    _ttsActive = true;
+    if (btn) { btn.textContent = "⏹"; }
+    _audio.onended = _audio.onerror = () => { _ttsActive=false; if(btn)btn.textContent="🔊"; URL.revokeObjectURL(url); };
+    _audio.play();
+  } catch(e) { _ttsActive=false; if(btn)btn.textContent="🔊"; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHALLENGE MODE (Duolingo-style)
+// ══════════════════════════════════════════════════════════════
+async function startChallenge() {
+  if (!currentLesson) return;
+  chal = { questions:[], current:0, hearts:3, results:[], lessonId:currentLesson.id, lessonName:currentLesson.name, subject:currentSubject };
+  showPage("challenge");
+  document.getElementById("q-card").innerHTML = '<div class="explain-loading"><span class="loading-spin">🎲</span>AI正在出题，请稍候...</div>';
+  updateChalProgress();
+  try {
+    const r = await fetch("/api/quiz", {
+      method:"POST", headers:{"Content-Type":"application/json","X-API-Key":apiKey},
+      body: JSON.stringify({subject:currentSubject, lesson_name:currentLesson.name, key_points:currentLesson.key_points, type:"mixed", count:8})
+    });
+    const d = await r.json();
+    if (d.error || !d.questions?.length) { document.getElementById("q-card").innerHTML = `<div class="empty"><div>出题失败：${d.error||"请重试"}</div></div>`; return; }
+    chal.questions = d.questions;
+    renderChalQuestion();
+  } catch(e) { document.getElementById("q-card").innerHTML = `<div class="empty">网络错误：${e.message}</div>`; }
+}
+
+function updateChalProgress() {
+  const total = chal.questions.length || 8;
+  const pct = total ? (chal.current / total * 100) : 0;
+  document.getElementById("chal-prog").style.width = pct + "%";
+  document.getElementById("chal-counter").textContent = chal.current + " / " + total;
+  const h = chal.hearts;
+  document.getElementById("hearts-display").innerHTML = "❤️".repeat(h) + (h<3?"🖤".repeat(3-h):"");
+}
+
+function renderChalQuestion() {
+  const q = chal.questions[chal.current];
+  if (!q) { showChalResult(); return; }
+  updateChalProgress();
+  const qnum = chal.current + 1;
+  const total = chal.questions.length;
+  let inputHtml = "";
+  if (q.options) {
+    inputHtml = `<div class="opts">${Object.entries(q.options).map(([k,v])=>`
+      <button class="opt" id="opt-${k}" onclick="selectOpt('${k}','${q.answer}','${q.id}')">
+        <span class="opt-key">${k}</span><span>${v}</span>
+      </button>`).join("")}</div>`;
+  } else {
+    // 兜底：判断题
+    inputHtml = `<div class="opts">
+      <button class="opt" id="opt-T" onclick="selectOpt('正确','${q.answer}','${q.id}')"><span class="opt-key">✓</span><span>正确</span></button>
+      <button class="opt" id="opt-F" onclick="selectOpt('错误','${q.answer}','${q.id}')"><span class="opt-key">✗</span><span>错误</span></button>
+    </div>`;
+  }
+
+  const qText = q.question;
+  // 朗读文本：题目 + 选项
+  const optLines = q.options ? Object.entries(q.options).map(([k,v])=>`选项${k}：${v}`).join('，') : '';
+  const ttsFullText = qText + (optLines ? '。' + optLines : '');
+
+  document.getElementById("q-card").innerHTML = `
+    <div class="q-label">第${qnum}题 / 共${total}题 &nbsp;·&nbsp; 选择题</div>
+    <div class="q-text-row">
+      <div class="q-text">${qText}</div>
+      <button class="q-tts-btn" id="q-tts-btn" title="朗读题目和选项">🔊</button>
+    </div>
+    ${inputHtml}
+    <div class="feedback" id="feedback-${q.id}"></div>`;
+  const ttsBtn = document.getElementById("q-tts-btn");
+  if (ttsBtn) ttsBtn.addEventListener("click", () => ttsSpeakText(ttsFullText, ttsBtn));
+}
+
+function selectOpt(chosen, answer, qid) {
+  const isCorrect = chosen.toLowerCase() === answer.toLowerCase();
+  document.querySelectorAll(".opt").forEach(o => o.disabled = true);
+  const chosenEl = document.getElementById("opt-" + chosen) || document.querySelector(`.opt[onclick*="'${chosen}'"]`);
+  if (chosenEl) chosenEl.classList.add(isCorrect ? "correct" : "wrong");
+  if (!isCorrect) {
+    const correctEl = document.getElementById("opt-" + answer) || document.querySelector(`.opt[onclick*="'${answer}'"]`);
+    if (correctEl) correctEl.classList.add("correct");
+  }
+  finishQuestion(isCorrect, chosen, qid);
+}
+
+function submitFill(answer, qid) {
+  const input = document.getElementById("fill-ans");
+  const val = input?.value.trim() || "";
+  const isCorrect = val.toLowerCase() === answer.toLowerCase();
+  if (input) { input.disabled = true; input.classList.add(isCorrect?"correct":"wrong"); }
+  finishQuestion(isCorrect, val, qid);
+}
+
+function submitQA(qid) {
+  const ta = document.getElementById("qa-ans");
+  const val = ta?.value.trim() || "";
+  const isCorrect = val.length > 8;  // QA: 自评
+  if (ta) ta.disabled = true;
+  finishQuestion(isCorrect, val, qid);
+}
+
+function finishQuestion(isCorrect, userAnswer, qid) {
+  const q = chal.questions.find(x => String(x.id) === String(qid));
+  chal.results.push({ q, isCorrect, userAnswer });
+
+  if (!isCorrect) {
+    chal.hearts = Math.max(0, chal.hearts - 1);
+    updateChalProgress();
+  }
+
+  const fb = document.getElementById("feedback-" + qid);
+  if (fb) {
+    fb.className = "feedback show " + (isCorrect ? "correct-fb" : "wrong-fb");
+    fb.innerHTML = `
+      <div class="fb-title">${isCorrect ? "✅ 太棒了！答对了！" : "❌ 答错了，没关系！"}</div>
+      <div class="fb-exp">${isCorrect ? "" : `正确答案：<strong>${q?.answer || ""}</strong><br>`}${q?.explanation ? "💡 " + q.explanation : ""}</div>
+      <button class="next-btn" onclick="nextQuestion()">${chal.current + 1 < chal.questions.length ? "下一题 →" : "查看结果 🎉"}</button>`;
+  }
+
+  // 答错记录错题
+  if (!isCorrect && q) {
+    fetch("/api/wrong_answers", {method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({subject:chal.subject, lesson_id:chal.lessonId, question:q.question, my_answer:userAnswer, correct_answer:q.answer})});
+  }
+
+  // 实时记录知识点掌握度（如果题目有kp字段）
+  if (q && q.kp) {
+    fetch("/api/kp_log", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({entries:[{subject:chal.subject, lesson_id:chal.lessonId, kp:q.kp, is_correct:isCorrect}]})});
+  }
+
+  // Hearts用完：允许继续但提示
+  if (chal.hearts === 0) {
+    const btn = fb?.querySelector(".next-btn");
+    if (btn) btn.textContent = "继续 →（下次要全对哦）";
+  }
+}
+
+function nextQuestion() {
+  chal.current++;
+  if (chal.current >= chal.questions.length) { showChalResult(); return; }
+  renderChalQuestion();
+  document.querySelector(".chal-body").scrollTop = 0;
+}
+
+function showChalResult() {
+  const total = chal.results.length;
+  const correct = chal.results.filter(r=>r.isCorrect).length;
+  const pct = total ? Math.round(correct/total*100) : 0;
+  const stars = pct >= 90 ? 3 : pct >= 70 ? 2 : pct >= 50 ? 1 : 0;
+  const xp = correct * 10 + (pct === 100 ? 20 : 0) + (stars === 3 ? 10 : 0);
+  const emoji = pct===100?"🏆":pct>=80?"🌟":pct>=60?"😊":"💪";
+  const msg = pct===100?"完美！满分！太厉害了！":pct>=80?"做得非常好！继续保持！":pct>=60?"不错哦！再努力一点！":"加油！多练几次就会了！";
+  const scoreClass = pct>=80?"perfect":pct>=60?"good":"poor";
+
+  // Save XP + mastery
+  fetch("/api/stats/xp", {method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({xp, lesson_id:chal.lessonId, stars, score:pct})});
+  mastery[chal.lessonId] = {...(mastery[chal.lessonId]||{}), stars: Math.max((mastery[chal.lessonId]?.stars||0), stars), best_score:Math.max((mastery[chal.lessonId]?.best_score||0),pct)};
+  userStats.total_xp = (userStats.total_xp||0) + xp;
+  userStats.today_xp = (userStats.today_xp||0) + xp;
+  updateTopbar();
+  renderSidebar(currentSubject);
+
+  // 批量记录知识点掌握度（题目无kp字段时，按round-robin分配课程知识点）
+  const kps = currentLesson?.key_points || [];
+  if (kps.length > 0) {
+    const entries = [];
+    chal.results.forEach((r, i) => {
+      if (!r.q?.kp) {  // 只补录没有精确kp的题
+        entries.push({subject: chal.subject, lesson_id: chal.lessonId, kp: kps[i % kps.length], is_correct: r.isCorrect});
+      }
+    });
+    if (entries.length > 0) {
+      fetch("/api/kp_log", {method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({entries})});
+    }
+  }
+
+  // 刷新实力数据（后台）
+  fetch("/api/exam_readiness").then(r=>r.json()).then(d=>{ readinessData=d; }).catch(()=>{});
+
+  // Mistakes
+  const mistakes = chal.results.filter(r=>!r.isCorrect);
+  const mistakeHtml = mistakes.length ? `
+    <div class="result-mistakes" style="display:block">
+      <h4>❌ 错题回顾（${mistakes.length}题）</h4>
+      ${mistakes.map(r=>`<div class="mistake-item">
+        <div class="mq">Q: ${r.q?.question||""}</div>
+        <div class="ma">我答：${r.userAnswer}</div>
+        <div class="mca">✅ 正确：${r.q?.answer||""}</div>
+      </div>`).join("")}
+    </div>` : "";
+
+  document.getElementById("result-card").innerHTML = `
+    <span class="result-emoji">${emoji}</span>
+    <div class="result-score ${scoreClass}">${pct}分</div>
+    <div class="result-label">${correct} / ${total} 题答对 &nbsp;·&nbsp; ${msg}</div>
+    <span class="result-stars">${"★".repeat(stars)}${"☆".repeat(3-stars)}</span>
+    <div><span class="xp-gained">+${xp} XP 获得！</span></div>
+    ${mistakeHtml}
+    <div class="result-btns" style="margin-top:16px">
+      <button class="rbtn secondary" onclick="startChallenge()">🔄 再来一次</button>
+      <button class="rbtn primary" onclick="backToLesson()">继续学习 →</button>
+    </div>`;
+
+  showPage("result");
+
+  // 星星庆祝
+  if (stars === 3) celebrate("🏆");
+  else if (pct === 100) celebrate("🎉");
+}
+
+function celebrate(text) {
+  const el = document.getElementById("celebrate");
+  document.getElementById("celebrate-text").textContent = text;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2500);
+}
+
+function exitChallenge() { backToLesson(); }
+
+// ══════════════════════════════════════════════════════════════
+// CHAT
+// ══════════════════════════════════════════════════════════════
+function showChat() {
+  document.getElementById("chat-lesson-title").textContent = currentLesson?.name || "";
+  chatHistory = [];
+  document.getElementById("chat-msgs").innerHTML = `<div class="msg ai"><div class="msg-av">🤖</div><div class="msg-bub">你好！我们今天学习【${currentLesson?.name||""}】😊 有什么不懂的地方随时问我！</div></div>`;
+  const quick = {yuwen:["这篇课文讲了什么？","作者表达了什么感情？","有什么重要词语？","帮我出几道练习题"],
+    shuxue:["这个知识点怎么理解？","给我举个例题","有什么解题技巧？","考试会怎么考？"],
+    yingyu:["这节课的语法重点是什么？","核心单词怎么记？","帮我出道练习题","怎么用在句子里？"]};
+  const qs = quick[currentSubject] || quick.yuwen;
+  document.getElementById("chat-quick").innerHTML = qs.map(q=>`<button class="qbtn" onclick="askQuick('${q.replace(/'/g,"\\'")}')">💬 ${q}</button>`).join("");
+  showPage("chat");
+}
+
+function askQuick(q) { document.getElementById("chat-ta").value = q; sendChat(); }
+function chatKey(e) { if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();} }
+
+async function sendChat() {
+  const ta = document.getElementById("chat-ta");
+  const text = ta.value.trim();
+  if (!text) return;
+  ta.value = ""; ta.style.height = "auto";
+  document.getElementById("chat-send").disabled = true;
+  appendChatMsg("user", text);
+  chatHistory.push({role:"user", content:text});
+  const tid = appendTyping();
+  try {
+    const r = await fetch("/api/chat", {
+      method:"POST", headers:{"Content-Type":"application/json","X-API-Key":apiKey},
+      body: JSON.stringify({subject:currentSubject, lesson_name:currentLesson?.name, messages:chatHistory})
+    });
+    removeTyping(tid);
+    const reader = r.body.getReader(), dec = new TextDecoder();
+    let ai = ""; const bub = appendChatMsg("ai","");
+    while(true){
+      const {done,value} = await reader.read(); if(done)break;
+      for(const line of dec.decode(value).split("\n")){
+        if(line.startsWith("data: ")){
+          const raw=line.slice(6); if(raw==="[DONE]")break;
+          try{const d=JSON.parse(raw);if(d.content){ai+=d.content;bub.textContent=ai;scrollChat();}}catch{}
+        }
+      }
+    }
+    chatHistory.push({role:"assistant",content:ai});
+  } catch(e){removeTyping(tid);appendChatMsg("ai","出错了："+e.message);}
+  document.getElementById("chat-send").disabled = false;
+}
+
+function appendChatMsg(role, text) {
+  const c = document.getElementById("chat-msgs");
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  const speakBtn = role==="ai" ? `<button class="chat-speak-btn" onclick="ttsSpeakText(this.previousElementSibling?.textContent||'',this)" title="朗读">🔊</button>` : "";
+  div.innerHTML = `<div class="msg-av">${role==="ai"?"🤖":"👦"}</div><div class="msg-bub">${text}</div>${speakBtn}`;
+  c.appendChild(div); scrollChat();
+  return div.querySelector(".msg-bub");
+}
+
+let _tc = 0;
+function appendTyping(){const c=document.getElementById("chat-msgs");const id=++_tc;const d=document.createElement("div");d.className="msg ai";d.id="ty-"+id;d.innerHTML='<div class="msg-av">🤖</div><div class="msg-bub typing"><span></span><span></span><span></span></div>';c.appendChild(d);scrollChat();return id;}
+function removeTyping(id){document.getElementById("ty-"+id)?.remove();}
+function scrollChat(){const c=document.getElementById("chat-msgs");c.scrollTop=c.scrollHeight;}
+
+// ══════════════════════════════════════════════════════════════
+// EXAM
+// ══════════════════════════════════════════════════════════════
+function showExam() {
+  document.getElementById("exam-title").textContent = currentLesson ? SUBJ_NAME[currentSubject] + "模拟考试" : "模拟考试";
+  document.getElementById("exam-body").innerHTML = `<div class="exam-setup">
+    <div style="font-size:40px;margin-bottom:10px">📝</div>
+    <h3 style="font-size:20px;margin-bottom:6px">模拟考试</h3>
+    <p style="color:var(--light);margin-bottom:20px;font-size:14px">AI出一套完整模拟卷</p>
+    <div class="exam-type-row">
+      <div class="etcard sel" id="et-mid" onclick="selExamType('midterm')"><div class="eicon">📋</div><h4>期中模拟</h4><p>上半学期重点</p></div>
+      <div class="etcard" id="et-fin" onclick="selExamType('final')"><div class="eicon">🏆</div><h4>期末模拟</h4><p>全册综合考查</p></div>
+    </div>
+    <button class="big-btn" onclick="genExam()">🚀 开始出卷</button>
+  </div>`;
+  showPage("exam");
+}
+
+function selExamType(t) {
+  examType = t;
+  document.getElementById("et-mid")?.classList.toggle("sel", t==="midterm");
+  document.getElementById("et-fin")?.classList.toggle("sel", t==="final");
+}
+
+async function genExam() {
+  const body = document.getElementById("exam-body");
+  body.innerHTML = '<div class="explain-loading" style="padding:60px"><span class="loading-spin">📝</span>AI出卷中，约30秒...</div>';
+  try {
+    const r = await fetch("/api/exam", {
+      method:"POST",headers:{"Content-Type":"application/json","X-API-Key":apiKey},
+      body:JSON.stringify({subject:currentSubject, exam_type:examType})
+    });
+    const d = await r.json();
+    if(d.error){body.innerHTML=`<div class="empty">出卷失败：${d.error}</div>`;return;}
+    renderExamPaper(d);
+  } catch(e){body.innerHTML=`<div class="empty">请求失败：${e.message}</div>`;}
+}
+
+function renderExamPaper(data) {
+  const body = document.getElementById("exam-body");
+  let allQs = [];
+  let html = `<div style="text-align:center;margin-bottom:20px"><h2>${data.title||"模拟试卷"}</h2><p style="color:var(--light);font-size:13px">满分 ${data.total_score||100} 分</p></div>`;
+  (data.sections||[]).forEach(sec => {
+    html += `<div style="font-size:14px;font-weight:800;margin:18px 0 10px;color:var(--text)">${sec.name}（每题${sec.score_each}分）</div>`;
+    (sec.questions||[]).forEach((q,i) => {
+      allQs.push(q);
+      let inp = "";
+      if(q.type==="choice"&&q.options){
+        inp=`<div class="opts">${Object.entries(q.options).map(([k,v])=>`<button class="opt" id="ex-opt-${q.id}-${k}" onclick="exSelect('${q.id}','${k}')"><span class="opt-key">${k}</span><span>${v}</span></button>`).join("")}</div>`;
+      } else if(q.type==="judge"){
+        inp=`<div class="opts"><button class="opt" id="ex-opt-${q.id}-T" onclick="exSelect('${q.id}','正确')"><span class="opt-key">✓</span><span>正确</span></button><button class="opt" id="ex-opt-${q.id}-F" onclick="exSelect('${q.id}','错误')"><span class="opt-key">✗</span><span>错误</span></button></div>`;
+      } else if(q.type==="fill"){
+        inp=`<input class="fill-input" id="ex-fill-${q.id}" placeholder="填写答案...">`;
+      } else {
+        inp=`<textarea class="qa-area" id="ex-qa-${q.id}" placeholder="写出答案..."></textarea>`;
+      }
+      html += `<div class="eq-card" id="exqc-${q.id}"><div class="eq-num">第${q.id}题</div><div class="eq-text">${q.question}</div>${inp}<div class="eq-exp" id="ex-exp-${q.id}">💡 ${q.explanation||q.answer||""}</div></div>`;
+    });
+  });
+  html += `<div style="text-align:center;margin:24px 0;display:flex;gap:12px;justify-content:center">
+    <button class="big-btn" onclick='submitExam(${JSON.stringify(allQs).replace(/'/g,"&apos;")})'>📤 交卷批改</button>
+    <button class="rbtn secondary" onclick="showExam()">🔄 重新出卷</button>
+  </div>`;
+  body.innerHTML = html;
+}
+
+let _exSelections = {};
+function exSelect(qid, key) {
+  _exSelections[qid] = key;
+  document.querySelectorAll(`[id^="ex-opt-${qid}-"]`).forEach(o=>o.classList.remove("correct","wrong","selected"));
+  const el = document.getElementById(`ex-opt-${qid}-${key}`);
+  if(el) el.style.borderColor="var(--purple)", el.style.background="#f0f4ff";
+}
+
+function submitExam(questions) {
+  let correct=0;
+  questions.forEach(q=>{
+    let ua="";
+    if(q.type==="choice"||q.type==="judge") ua=_exSelections[q.id]||"";
+    else if(q.type==="fill") ua=document.getElementById(`ex-fill-${q.id}`)?.value.trim()||"";
+    else ua=document.getElementById(`ex-qa-${q.id}`)?.value.trim()||"";
+    const ok=ua.toLowerCase()===q.answer.toLowerCase()||(q.type==="qa"&&ua.length>8);
+    if(ok)correct++;
+    else if(ua)fetch("/api/wrong_answers",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:currentSubject,lesson_id:currentLesson?.id||"exam",question:q.question,my_answer:ua,correct_answer:q.answer})});
+    document.getElementById(`ex-exp-${q.id}`)?.classList.add("show");
+    const card=document.getElementById(`exqc-${q.id}`);
+    if(card){
+      const badge=document.createElement("span");
+      badge.className="eq-result "+(ok?"c":"w");
+      badge.textContent=ok?"✓ 正确":"✗ 错误";
+      card.querySelector(".eq-text")?.after(badge);
+    }
+    if(q.type==="choice"||q.type==="judge"){
+      document.querySelectorAll(`[id^="ex-opt-${q.id}-"]`).forEach(o=>{ o.disabled=true; o.style=""; });
+      const correctEl=document.getElementById(`ex-opt-${q.id}-${q.answer}`);
+      if(correctEl)correctEl.classList.add("correct");
+      if(!ok&&ua){const wrongEl=document.getElementById(`ex-opt-${q.id}-${ua}`);if(wrongEl)wrongEl.classList.add("wrong");}
+    }
+  });
+  const pct=questions.length?Math.round(correct/questions.length*100):0;
+  const body=document.getElementById("exam-body");
+  body.insertAdjacentHTML("afterbegin",`<div class="result-card" style="margin-bottom:20px;text-align:center;padding:24px">
+    <div style="font-size:48px;font-weight:900;color:${pct>=80?"var(--green)":pct>=60?"var(--orange)":"var(--red)"}">${pct}分</div>
+    <div style="color:var(--light);margin:6px 0 12px">答对 ${correct} / ${questions.length} 题</div>
+    <div style="font-size:18px">${pct>=80?"🌟 太棒了！冲刺第一有希望！":pct>=60?"😊 不错！再加把劲！":"💪 多复习几遍，你能做到！"}</div>
+  </div>`);
+  body.scrollTop=0;
+  _exSelections={};
+}
+
+// ══════════════════════════════════════════════════════════════
+// WRONG BOOK
+// ══════════════════════════════════════════════════════════════
+async function showWrong() {
+  showPage("wrong");
+  const items = await fetch("/api/wrong_answers").then(r=>r.json());
+  const c = document.getElementById("wrong-content");
+  if(!items.length){c.innerHTML='<div class="empty"><div class="ei">🎉</div>错题本是空的，你真厉害！</div>';return;}
+  const byS={};
+  items.forEach(w=>{(byS[w.subject]=byS[w.subject]||[]).push(w);});
+  c.innerHTML=Object.entries(byS).map(([s,ws])=>`
+    <div class="wrong-section">
+      <h4>${{yuwen:"📖 语文",shuxue:"🔢 数学",yingyu:"🌍 英语"}[s]||s}（${ws.length}题）</h4>
+      ${ws.map(w=>`<div class="wcard" id="wc-${w.id}">
+        <button class="wdel" onclick="delWrong(${w.id})">✕</button>
+        <div class="wq">❓ ${w.question}</div>
+        <div class="wa">我答：${w.my_answer}</div>
+        <div class="wca">✅ 正确：${w.correct_answer}</div>
+      </div>`).join("")}
+    </div>`).join("");
+}
+
+async function delWrong(id){
+  await fetch(`/api/wrong_answers/${id}`,{method:"DELETE"});
+  document.getElementById(`wc-${id}`)?.remove();
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXAM READINESS DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function _scoreColor(s) { return s >= 90 ? "#27ae60" : s >= 75 ? "#f39c12" : "#e74c3c"; }
+function _masteryColor(m) { return m >= 80 ? "#27ae60" : m >= 50 ? "#f39c12" : "#e74c3c"; }
+
+function _injectHomeScores() {
+  const sec = document.getElementById("home-readiness-section");
+  if (!sec || !Object.keys(readinessData).length) return;
+  const avg = Math.round(["yuwen","shuxue","yingyu"].reduce((a,s)=>a+(readinessData[s]?.predicted_score||50),0)/3);
+  const avgColor = _scoreColor(avg);
+  sec.innerHTML = `
+    <div class="section-hdr" style="margin-top:0">🏆 考试预测得分 <span style="font-size:11px;font-weight:400;cursor:pointer;color:var(--purple)" onclick="showReadiness()">查看详情 →</span></div>
+    <div class="pred-score-row" style="margin-bottom:18px">
+      ${["yuwen","shuxue","yingyu"].map(s=>{
+        const info = readinessData[s]||{};
+        const sc = info.predicted_score||50;
+        const color = _scoreColor(sc);
+        const gap = Math.max(0, 95-sc);
+        return `<div class="score-card-big" style="border-color:${color}33" onclick="showReadiness()">
+          <div class="score-num" style="color:${color}">${sc}</div>
+          <div class="score-lbl">${SUBJ_ICON[s]} ${SUBJ_NAME[s]}</div>
+          <div class="score-gap" style="color:${color}">${gap>0?`↑${gap}分到第一`:"🏆目标达成"}</div>
+          <div style="font-size:10px;color:var(--light);margin-top:2px">${info.practiced_kps||0}/${info.total_kps||0}知识点</div>
+        </div>`;
+      }).join("")}
+    </div>`;
+}
+
+async function showReadiness() {
+  showPage("readiness");
+  const body = document.getElementById("readiness-body");
+  body.innerHTML = '<div class="explain-loading"><span class="loading-spin">📊</span>分析隐藏分数中...</div>';
+  try {
+    const data = await fetch("/api/exam_readiness").then(r=>r.json());
+    readinessData = data;
+    const TARGET = 95;
+    const scores = ["yuwen","shuxue","yingyu"].map(s=>data[s]?.predicted_score||50);
+    const avg = Math.round(scores.reduce((a,b)=>a+b,0)/3);
+    const avgColor = _scoreColor(avg);
+    const avgMsg = avg>=90?"保持下去，三科第一就是你！":avg>=80?"很棒！针对薄弱知识点冲刺！":"找出弱点，集中突破，追上第一！";
+
+    let html = `
+      <div class="overall-band" style="background:linear-gradient(135deg,${avgColor},${avgColor}bb)">
+        <div class="band-icon">${avg>=90?"🏆":avg>=80?"🌟":"💪"}</div>
+        <div>
+          <div class="band-score">综合预测 ${avg} 分</div>
+          <div class="band-msg">${avgMsg}</div>
+        </div>
+      </div>
+      <div class="pred-score-row">
+        ${["yuwen","shuxue","yingyu"].map(s=>{
+          const info=data[s]||{};
+          const sc=info.predicted_score||50;
+          const color=_scoreColor(sc);
+          const gap=Math.max(0,TARGET-sc);
+          return `<div class="score-card-big" style="border-color:${color}44">
+            <div class="score-num" style="color:${color}">${sc}</div>
+            <div class="score-lbl">${SUBJ_ICON[s]} ${SUBJ_NAME[s]}</div>
+            <div class="score-gap" style="color:${color}">${gap>0?"距第一 "+gap+" 分":"🏆 目标达成"}</div>
+            <div style="font-size:10px;color:var(--light);margin-top:3px">${info.practiced_kps||0}/${info.total_kps||0} 知识点已练</div>
+          </div>`;
+        }).join("")}
+      </div>
+      <div style="font-size:12px;color:var(--light);margin:8px 0 20px;text-align:center">
+        隐藏分数基于答题记录 · 遗忘曲线加权 · 练得越多越准确
+      </div>`;
+
+    for (const sk of ["yuwen","shuxue","yingyu"]) {
+      const info = data[sk]||{};
+      const weaks = info.weak_kps||[];
+      const sc = info.predicted_score||50;
+      const color = SUBJ_COLOR[sk];
+      html += `<div class="readiness-subj-card">
+        <div class="readiness-subj-hdr">
+          <div>
+            <span style="font-size:15px;font-weight:800">${SUBJ_ICON[sk]} ${SUBJ_NAME[sk]}</span>
+            <span style="font-size:12px;color:var(--light);margin-left:8px">预测 ${sc} 分 · 掌握度 ${info.avg_mastery||0}%</span>
+          </div>
+          <button class="drill-btn" style="background:${color}" onclick="startTargetedDrill('${sk}')">⚡ 薄弱突破训练</button>
+        </div>
+        ${weaks.length===0 ? '<div style="color:var(--light);font-size:13px;text-align:center;padding:12px">暂无数据，去做题积累记录！</div>' : ''}
+        ${weaks.slice(0,8).map(w=>{
+          const never = w.attempts===0;
+          const pct = never ? 0 : Math.max(0, w.mastery);
+          const barColor = _masteryColor(pct);
+          const label = never ? "⚠️ 从未练习" : `${w.mastery}%`;
+          return `<div class="kp-bar-row">
+            <div class="kp-meta">
+              <span style="max-width:65%">${w.kp}</span>
+              <span style="color:${never?"#e74c3c":barColor};font-weight:600">${label}（${w.attempts}次）</span>
+            </div>
+            <div class="kp-bar-wrap">
+              <div class="kp-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>`;
+    }
+
+    body.innerHTML = html;
+  } catch(e) {
+    body.innerHTML = `<div style="color:red;padding:20px">加载失败：${e.message}</div>`;
+  }
+}
+
+async function startTargetedDrill(subject) {
+  let info = readinessData[subject];
+  if (!info) {
+    const data = await fetch("/api/exam_readiness").then(r=>r.json());
+    readinessData = data;
+    info = data[subject];
+  }
+  const weakKps = (info?.weak_kps||[]).slice(0,5).map(w=>w.kp);
+  if (!weakKps.length) { alert("暂无薄弱知识点记录，先去做几道题吧！"); return; }
+
+  const subjName = SUBJ_NAME[subject];
+  currentSubject = subject;
+  currentLesson = {id:`drill_${subject}`, name:`${subjName}薄弱突破`, key_points: weakKps};
+  chal = {questions:[], current:0, hearts:3, results:[],
+          lessonId:`drill_${subject}`, lessonName:`${subjName}薄弱突破`, subject};
+
+  showPage("challenge");
+  document.getElementById("chal-title").textContent = `⚡ ${subjName} 薄弱突破训练`;
+  document.getElementById("q-card").innerHTML = `<div class="explain-loading"><span class="loading-spin">🎯</span>AI正在针对你的薄弱点出题...</div>`;
+  updateChalProgress();
+  try {
+    const r = await fetch("/api/targeted_quiz", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({subject, kps:weakKps, count:6})
+    });
+    const d = await r.json();
+    if (d.error||!d.questions?.length) {
+      document.getElementById("q-card").innerHTML = `<div style="color:red;padding:20px">${d.error||"出题失败，请重试"}</div>`;
+      return;
+    }
+    chal.questions = d.questions;
+    updateChalProgress();
+    renderChalQuestion();
+  } catch(e) {
+    document.getElementById("q-card").innerHTML = `<div style="color:red;padding:20px">错误: ${e.message}</div>`;
+  }
+}
+
+function startLessonTargetedDrill() {
+  // 用当前课程的知识点做薄弱突破
+  const kps = currentLesson?.key_points||[];
+  if (!kps.length) { alert("该课程暂无知识点配置"); return; }
+  chal = {questions:[], current:0, hearts:3, results:[],
+          lessonId:`drill_${currentLesson.id}`, lessonName:`${currentLesson.name}专项`, subject:currentSubject};
+
+  showPage("challenge");
+  document.getElementById("chal-title").textContent = `⚡ ${currentLesson.name} 专项强化`;
+  document.getElementById("q-card").innerHTML = `<div class="explain-loading"><span class="loading-spin">🎯</span>AI正在针对本课知识点出题...</div>`;
+  updateChalProgress();
+  fetch("/api/targeted_quiz", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({subject:currentSubject, kps, count:6})
+  }).then(r=>r.json()).then(d=>{
+    if (d.error||!d.questions?.length) {
+      document.getElementById("q-card").innerHTML = `<div style="color:red;padding:20px">${d.error||"出题失败"}</div>`;
+      return;
+    }
+    chal.questions = d.questions;
+    updateChalProgress();
+    renderChalQuestion();
+  }).catch(e=>{
+    document.getElementById("q-card").innerHTML = `<div style="color:red;padding:20px">错误: ${e.message}</div>`;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// PAGE SWITCHING
+// ══════════════════════════════════════════════════════════════
+const PAGES = ["home","lesson","learn","challenge","result","chat","exam","wrong","readiness"];
+function showPage(p) {
+  ttsStop();
+  PAGES.forEach(name => {
+    const el = document.getElementById("pg-"+name);
+    if (!el) return;
+    const isActive = name === p;
+    if (isActive) {
+      el.style.display = ["lesson","learn","challenge","chat","exam","readiness"].includes(name) ? "flex" : "block";
+    } else {
+      el.style.display = "none";
+    }
+  });
+  if (p === "wrong") showWrong();
+  if (p === "home") renderHome();
+}
+
+function showLearn2() { showLearn(); }
+function showChat2() { showChat(); }
+
+// ══════════════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════════════
+function showModal(id) { document.getElementById("modal-"+id)?.classList.add("show"); }
+function closeModal(id) { document.getElementById("modal-"+id)?.classList.remove("show"); }
+async function saveSettings() {
+  const k = document.getElementById("cfg-key").value.trim();
+  const m = document.getElementById("cfg-model").value;
+  if(k) apiKey=k;
+  await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({api_key:k||undefined,model:m})});
+  closeModal("settings");
+}
+
+// ══════════════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════════════
+init();
+{% endraw %}
+</script>
+</body>
+</html>
