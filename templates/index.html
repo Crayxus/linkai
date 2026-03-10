@@ -770,7 +770,9 @@ async function doExplain(level) {
       method:"POST", headers:{"Content-Type":"application/json","X-API-Key":apiKey},
       body: JSON.stringify({subject:currentSubject, topic:currentLesson.name+(currentLesson.key_points?" - "+currentLesson.key_points.join("，"):""), level})
     });
-    const d = await r.json();
+    if (!r.ok) { box.textContent = "服务器错误（" + r.status + "），请稍后重试"; return; }
+    const text = await r.text();
+    let d; try { d = JSON.parse(text); } catch { box.textContent = "服务器返回异常，请稍后重试"; return; }
     box.textContent = d.content || d.error || "讲解失败";
     if (d.content) {
       document.getElementById("tts-bar").style.display = "flex";
