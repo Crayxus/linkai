@@ -635,13 +635,10 @@ def api_tts():
                 await c.save(cache_path)
 
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as pool:
-                    pool.submit(asyncio.run, _gen()).result()
-            else:
-                asyncio.run(_gen())
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(_gen())
+            loop.close()
         except Exception as e:
             return jsonify({"error": f"TTS生成失败: {str(e)}"}), 500
 
