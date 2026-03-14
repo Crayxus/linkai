@@ -54,23 +54,31 @@ def get_pdf_pages(subject):
     except Exception:
         return []
 
+def _is_toc_page(text):
+    """判断是否是目录页（包含大量省略号+页码模式）"""
+    return len(re.findall(r'[…·.]{3,}\s*\d+', text)) >= 3
+
 def clean_pdf_text(text, subject):
     """清理PDF提取的原始文本，修复格式问题"""
     lines = text.split('\n')
     if subject == 'yuwen':
-        # 移除拼音标注行（纯拉丁字母），并拼接前后行
         cleaned = []
         skip_next_join = False
         for line in lines:
             stripped = line.strip()
+            # 拼音行
             if re.match(r'^[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]{1,12}$', stripped):
                 if cleaned: skip_next_join = True
                 continue
+            # 散落圆圈数字
             if re.match(r'^[①②③④⑤⑥⑦⑧⑨⑩\s]+$', stripped): continue
+            # 页码
             if re.match(r'^\d{1,3}$', stripped): continue
-            # 移除末尾散落的生字行（连续单字无标点，如"昼耘供稚漪"）
-            if re.match(r'^[\u4e00-\u9fff]{2,10}$', stripped) and len(stripped) >= 3 and not any(c in stripped for c in '，。、：；！？'):
-                continue
+            # 散落生字行（2-10个连续汉字无标点）
+            if re.match(r'^[\u4e00-\u9fff\s]{2,20}$', stripped) and not any(c in stripped for c in '，。、：；！？〔〕（）'):
+                chars = stripped.replace(' ', '')
+                if 2 <= len(chars) <= 10: continue
+            # 拼音删除后拼接
             if skip_next_join and cleaned and stripped:
                 cleaned[-1] = cleaned[-1] + stripped
                 skip_next_join = False
@@ -81,32 +89,55 @@ def clean_pdf_text(text, subject):
     elif subject in ('shuxue', 'yingyu'):
         lines = [l for l in lines if not re.match(r'^\d{1,3}\s*$', l.strip())]
     text = '\n'.join(lines)
+    # 修复字间多余空格（"昼 出 耘田 夜 绩 麻" → "昼出耘田夜绩麻"）
+    # 只处理汉字之间的单个空格
+    text = re.sub(r'([\u4e00-\u9fff])\s([\u4e00-\u9fff])', r'\1\2', text)
+    text = re.sub(r'([\u4e00-\u9fff])\s([\u4e00-\u9fff])', r'\1\2', text)  # 再跑一次处理连续情况
+    # 合并连续空行
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
 
-def search_lesson_in_pdf(subject, lesson_name):
-    """在PDF中搜索课文名，返回 {text, pages}"""
+def search_lesson_in_pdf(subject, lesson_name, key_points=None):
+    """在PDF中搜索课文名，返回 {text, pages}。用key_points消歧"""
     pages = get_pdf_pages(subject)
     if not pages or not lesson_name:
         return {"text": "", "pages": []}
+
+    # 第一步：找包含课文名的非目录页
+    candidates = []
+    for pnum, ptxt in pages:
+        if _is_toc_page(ptxt): continue
+        if lesson_name in ptxt:
+            candidates.append((pnum, ptxt))
+
+    # 第二步：如果有多个候选区域（同名课文），用key_points消歧
+    if len(candidates) > 3 and key_points:
+        scored = []
+        for pnum, ptxt in candidates:
+            score = sum(1 for kp in key_points if kp in ptxt)
+            scored.append((score, pnum, ptxt))
+        scored.sort(reverse=True)
+        # 取得分最高的那组连续页
+        if scored[0][0] > 0:
+            best_page = scored[0][1]
+            candidates = [(pnum, ptxt) for pnum, ptxt in candidates if abs(pnum - best_page) <= 3]
+
+    if not candidates:
+        return {"text": "", "pages": []}
+
+    # 第三步：从第一个匹配页开始，取连续的2-3页
+    first_page = candidates[0][0]
     matched_pages = []
     matched_texts = []
-    # 先找包含课文名的页
     for pnum, ptxt in pages:
-        if lesson_name in ptxt:
+        if _is_toc_page(ptxt): continue
+        if first_page <= pnum <= first_page + 2:
             matched_pages.append(pnum)
             matched_texts.append(ptxt)
-    # 如果找到，也包含紧邻的后续页（课文通常跨页）
-    if matched_pages:
-        last = matched_pages[-1]
-        for pnum, ptxt in pages:
-            if pnum == last + 1 or pnum == last + 2:
-                if pnum not in matched_pages:
-                    matched_pages.append(pnum)
-                    matched_texts.append(ptxt)
+
     if not matched_pages:
         return {"text": "", "pages": []}
-    # 清理文本格式
+
     combined = "\n\n".join(matched_texts)
     cleaned = clean_pdf_text(combined, subject)
     return {"text": cleaned, "pages": matched_pages}
@@ -245,10 +276,18 @@ def _get_client():
     client = OpenAI(api_key=key, base_url=API_BASE_URL)
     return client, None
 
-def _build_teacher_system(subject_key, lesson_info):
+def _build_teacher_system(subject_key, lesson_info, key_points=None, poems=None):
     subject = CURRICULUM[subject_key]
+    # 构建具体课程内容描述
+    content_detail = ""
+    if poems:
+        content_detail += f"\n本课包含的篇目：{'、'.join(poems)}"
+    if key_points:
+        content_detail += f"\n本课的知识点：{'、'.join(key_points)}"
+
     base = f"""你是一位专业、亲切、有耐心的小学五年级AI老师，专门教{subject['name']}。
 当前学习的课程是：{lesson_info}
+这是人教版五年级下册的课程内容。{content_detail}
 
 你的教学风格：
 - 用简单易懂的语言解释，避免过于学术化
@@ -259,9 +298,9 @@ def _build_teacher_system(subject_key, lesson_info):
 - 语气亲切活泼，可以用"太棒了！""你真聪明！"等鼓励语
 
 重要规则：
-- 你只负责当前这节课【{lesson_info}】的教学，所有回答必须紧密围绕这节课的内容
-- 如果学生问了与【{lesson_info}】无关的问题（包括其他课文、其他科目、闲聊、游戏等），请友善但坚定地引导他回来，例如："这个问题很有趣，不过我们现在在学【{lesson_info}】哦～先把这节课学好再说！"
-- 即使是同一科目的其他课文内容，也要引导回到当前课程
+- 你只负责当前这节课【{lesson_info}】的教学，所有回答必须紧密围绕这节课的具体内容
+- 必须基于上述知识点和篇目来回答，不要自己编造或混淆其他年级/版本的内容
+- 如果学生问了与【{lesson_info}】无关的问题，请友善但坚定地引导他回来
 - 绝对不要回答与当前课程无关的内容
 
 教学目标：帮助学生在期中期末考试中取得优异成绩。
@@ -275,13 +314,15 @@ def api_chat():
     subject_key = data.get("subject", "yuwen")
     lesson_id = data.get("lesson_id", "")
     lesson_name = data.get("lesson_name", "")
+    key_points = data.get("key_points", [])
+    poems = data.get("poems", [])
     messages = data.get("messages", [])
 
     client, err = _get_client()
     if err:
         return jsonify({"error": err}), 400
 
-    system_prompt = _build_teacher_system(subject_key, lesson_name)
+    system_prompt = _build_teacher_system(subject_key, lesson_name, key_points=key_points, poems=poems)
 
     full_messages = [{"role": "system", "content": system_prompt}] + messages
 
@@ -351,9 +392,12 @@ def api_quiz():
 
     subject = CURRICULUM[subject_key]
     kp_str = "、".join(lesson_key_points) if lesson_key_points else lesson_name
+    poems = data.get("poems", [])
+    poems_str = f"\n本课包含的篇目：{'、'.join(poems)}" if poems else ""
 
-    prompt = f"""出{count}道小学五年级{subject['name']}选择题。
-课程：{lesson_name}，考查：{kp_str}
+    prompt = f"""出{count}道小学五年级下册（人教版）{subject['name']}选择题。
+课程：{lesson_name}，考查：{kp_str}{poems_str}
+注意：这是五年级下册的内容，不要和其他年级的同名课文混淆。
 重要规则：
 1. 只出纯文字题——选项必须是完整的文字描述，绝对不能为空、不能用图形符号代替
 2. 不出"看到的图形是（）"之类需要展示图形才能作答的题；改出考查概念/定义/规则/数量/特征的文字题
@@ -518,13 +562,14 @@ def api_explain():
     detail = "详细深入" if level == "detail" else "简洁易懂"
     lesson_name = data.get("lesson_name", "")
 
+    key_points = data.get("key_points", [])
     # 尝试获取PDF课本原文作为上下文
     pdf_context = ""
     if lesson_name:
         try:
-            pdf_result = search_lesson_in_pdf(subject_key, lesson_name)
+            pdf_result = search_lesson_in_pdf(subject_key, lesson_name, key_points=key_points)
             if pdf_result.get("text"):
-                pdf_context = pdf_result["text"][:3000]  # 限制长度
+                pdf_context = pdf_result["text"][:3000]
         except Exception:
             pass
 
@@ -574,8 +619,9 @@ def api_lesson_text():
     data = request.json
     subject = data.get("subject", "yuwen")
     lesson_name = data.get("lesson_name", "")
+    key_points = data.get("key_points", [])
     try:
-        result = search_lesson_in_pdf(subject, lesson_name)
+        result = search_lesson_in_pdf(subject, lesson_name, key_points=key_points)
         return jsonify(result)
     except Exception as e:
         return jsonify({"text": "", "pages": [], "error": str(e)})
