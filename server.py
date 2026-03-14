@@ -575,10 +575,13 @@ def _split_lang_segments(text):
     return segments
 
 
+AZURE_TTS_KEY = os.environ.get("AZURE_TTS_KEY", "")
+AZURE_TTS_REGION = os.environ.get("AZURE_TTS_REGION", "australiaeast")
+
 @app.route("/api/tts", methods=["POST"])
 def api_tts():
-    """用edge-tts生成语音，支持中英混合文本"""
-    import edge_tts
+    """用Azure Speech API生成语音（云希/Guy Neural）"""
+    import requests as http_req
 
     data = request.json
     text = (data.get("text") or "").strip()
@@ -594,51 +597,45 @@ def api_tts():
     text = re.sub(r'`(.+?)`', r'\1', text)
     text = re.sub(r'_+', '，', text)
     text = text.replace('《', '').replace('》', '')
+    # 转义XML特殊字符
+    text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-    # 接收前端指定voice
-    voice_param = (data.get("voice") or "").strip()
-
-    # 整体语言判断（用于单voice场景）
+    # 语言判断
     en_chars = len(re.findall(r'[a-zA-Z]', text))
     total_chars = max(len(re.sub(r'\s', '', text)), 1)
-    is_mixed = bool(re.search(r'[\u4e00-\u9fff]', text)) and en_chars > 0
+    voice_param = (data.get("voice") or "").strip()
 
-    # 缓存key
-    cache_key = hashlib.md5(f"v2:{voice_param}:{text}".encode()).hexdigest()
+    if voice_param:
+        voice = voice_param
+    elif en_chars / total_chars > 0.5:
+        voice = "en-US-GuyNeural"
+    else:
+        voice = "zh-CN-YunxiNeural"
+
+    lang = "en-US" if "en-US" in voice else "zh-CN"
+
+    # 缓存
+    cache_key = hashlib.md5(f"azure3:{voice}:{text}".encode()).hexdigest()
     cache_path = os.path.join(BASE_DIR, "data", f"tts_{cache_key}.mp3")
 
     if not os.path.exists(cache_path):
-        async def _gen():
-            # 混合文本：分段合成再拼接
-            if not voice_param and is_mixed:
-                parts = []
-                for seg, lang in _split_lang_segments(text):
-                    v = "en-US-GuyNeural" if lang == 'en' else "zh-CN-YunxiNeural"
-                    tmp = cache_path + f".{len(parts)}.mp3"
-                    c = edge_tts.Communicate(seg, voice=v, rate="-5%")
-                    await c.save(tmp)
-                    parts.append(tmp)
-                # 拼接所有片段
-                with open(cache_path, 'wb') as out:
-                    for p in parts:
-                        with open(p, 'rb') as f:
-                            out.write(f.read())
-                        os.remove(p)
-            else:
-                if voice_param:
-                    voice = voice_param
-                elif en_chars / total_chars > 0.5:
-                    voice = "en-US-GuyNeural"
-                else:
-                    voice = "zh-CN-YunxiNeural"
-                c = edge_tts.Communicate(text, voice=voice, rate="-5%")
-                await c.save(cache_path)
-
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(_gen())
-            loop.close()
+            ssml = f"""<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{lang}'>
+  <voice name='{voice}'>
+    <prosody rate='-5%'>{text}</prosody>
+  </voice>
+</speak>"""
+            tts_url = f"https://{AZURE_TTS_REGION}.tts.speech.microsoft.com/cognitiveservices/v1"
+            headers = {
+                "Ocp-Apim-Subscription-Key": AZURE_TTS_KEY,
+                "Content-Type": "application/ssml+xml",
+                "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
+            }
+            resp = http_req.post(tts_url, headers=headers, data=ssml.encode("utf-8"), timeout=30)
+            if resp.status_code != 200:
+                return jsonify({"error": f"Azure TTS失败: {resp.status_code} {resp.text[:200]}"}), 500
+            with open(cache_path, "wb") as f:
+                f.write(resp.content)
         except Exception as e:
             return jsonify({"error": f"TTS生成失败: {str(e)}"}), 500
 
