@@ -634,9 +634,21 @@ def api_tts():
                 c = edge_tts.Communicate(text, voice=voice, rate="-5%")
                 await c.save(cache_path)
 
-        asyncio.run(_gen())
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    pool.submit(asyncio.run, _gen()).result()
+            else:
+                asyncio.run(_gen())
+        except Exception as e:
+            return jsonify({"error": f"TTS生成失败: {str(e)}"}), 500
 
-    return send_file(cache_path, mimetype="audio/mpeg", as_attachment=False)
+    try:
+        return send_file(cache_path, mimetype="audio/mpeg", as_attachment=False)
+    except Exception as e:
+        return jsonify({"error": f"TTS文件读取失败: {str(e)}"}), 500
 
 
 # ─── 知识点追踪 & 隐藏分数系统 ───────────────────────────────────
