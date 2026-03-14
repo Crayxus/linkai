@@ -453,19 +453,23 @@ def api_quiz():
     poems_str = f"\n本课包含的篇目：{'、'.join(poems)}" if poems else ""
 
     prompt = f"""出{count}道小学五年级下册（人教版）{subject['name']}选择题。
-课程：{lesson_name}，考查：{kp_str}{poems_str}
-注意：这是五年级下册的内容，不要和其他年级的同名课文混淆。
+课程：{lesson_name}
+考查知识点：{kp_str}{poems_str}
+
+严格要求：所有题目必须且只能围绕【{lesson_name}】这一课的内容出题。
+绝对不能出其他课文、其他单元、其他年级的内容！
 重要规则：
 1. 只出纯文字题——选项必须是完整的文字描述，绝对不能为空、不能用图形符号代替
 2. 不出"看到的图形是（）"之类需要展示图形才能作答的题；改出考查概念/定义/规则/数量/特征的文字题
 3. 每题4个不同的文字选项A/B/C/D，answer只写1个大写字母，给出explanation
-4. 只输出JSON：{{"questions":[{{"id":1,"type":"choice","question":"题目","options":{{"A":"文字选项","B":"文字选项","C":"文字选项","D":"文字选项"}},"answer":"A","explanation":"解析"}}]}}"""
+4. 正确答案必须随机均匀分布在A/B/C/D中，严禁所有题都选同一个选项！例如8道题答案可以是B,D,A,C,B,A,D,C
+5. 只输出JSON：{{"questions":[{{"id":1,"type":"choice","question":"题目","options":{{"A":"...","B":"...","C":"...","D":"..."}},"answer":"B","explanation":"解析"}}]}}"""
 
     try:
         resp = client.chat.completions.create(
             model=API_MODEL,
             messages=[
-                {"role": "system", "content": "你是小学出题老师。只输出合法JSON对象，禁止输出任何其他文字。所有选项必须是非空的文字内容。"},
+                {"role": "system", "content": f"你是人教版五年级下册{subject['name']}出题老师。只针对【{lesson_name}】这一课出题，禁止涉及其他课文内容。只输出合法JSON对象，禁止输出任何其他文字。所有选项必须是非空的文字内容。"},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=3000,
@@ -992,7 +996,8 @@ def api_targeted_quiz():
 1. 只出纯文字题——选项必须是完整的文字描述，绝对不能为空
 2. 不出需要展示图形才能作答的题；改出考查概念/定义/规则/计算/特征的文字题
 3. 每题4个不同的文字选项A/B/C/D，answer只写1个大写字母，给出explanation，加kp字段注明对应知识点原文
-4. JSON格式：{{"questions":[{{"id":1,"type":"choice","kp":"知识点原文","question":"题目","options":{{"A":"文字选项","B":"文字选项","C":"文字选项","D":"文字选项"}},"answer":"A","explanation":"解析"}}]}}"""
+4. 正确答案必须随机均匀分布在A/B/C/D中，严禁所有题都选同一个选项
+5. JSON格式：{{"questions":[{{"id":1,"type":"choice","kp":"知识点原文","question":"题目","options":{{"A":"...","B":"...","C":"...","D":"..."}},"answer":"C","explanation":"解析"}}]}}"""
 
     try:
         resp = client.chat.completions.create(
