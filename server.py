@@ -22,6 +22,7 @@ PDF_FILES = {
     "yingyu":  "2026春人教版PEP五年级英语下册电子课本.pdf",
 }
 _pdf_text_cache = {}
+_pdf_pages_cache = {}  # subject -> [(page_num, text), ...]
 
 def get_pdf_text(subject, max_pages=None):
     if subject in _pdf_text_cache:
@@ -34,6 +35,48 @@ def get_pdf_text(subject, max_pages=None):
     text = "\n".join(p.get_text() for p in pages)
     _pdf_text_cache[subject] = text
     return text
+
+def get_pdf_pages(subject):
+    """返回 [(page_num, page_text), ...] 列表，带缓存"""
+    if subject in _pdf_pages_cache:
+        return _pdf_pages_cache[subject]
+    fname = PDF_FILES.get(subject)
+    if not fname:
+        return []
+    path = os.path.join(os.path.dirname(__file__), fname)
+    if not os.path.exists(path):
+        return []
+    try:
+        doc = fitz.open(path)
+        pages = [(i+1, p.get_text()) for i, p in enumerate(doc)]
+        _pdf_pages_cache[subject] = pages
+        return pages
+    except Exception:
+        return []
+
+def search_lesson_in_pdf(subject, lesson_name):
+    """在PDF中搜索课文名，返回 {text, pages}"""
+    pages = get_pdf_pages(subject)
+    if not pages or not lesson_name:
+        return {"text": "", "pages": []}
+    matched_pages = []
+    matched_texts = []
+    # 先找包含课文名的页
+    for pnum, ptxt in pages:
+        if lesson_name in ptxt:
+            matched_pages.append(pnum)
+            matched_texts.append(ptxt)
+    # 如果找到，也包含紧邻的后续页（课文通常跨页）
+    if matched_pages:
+        last = matched_pages[-1]
+        for pnum, ptxt in pages:
+            if pnum == last + 1 or pnum == last + 2:
+                if pnum not in matched_pages:
+                    matched_pages.append(pnum)
+                    matched_texts.append(ptxt)
+    if not matched_pages:
+        return {"text": "", "pages": []}
+    return {"text": "\n\n".join(matched_texts), "pages": matched_pages}
 
 # ─── SQLite 学习记录 ───────────────────────────────────────────────
 DB_PATH = os.path.join(BASE_DIR, "data", "study.db")
@@ -434,8 +477,36 @@ def api_explain():
 
     subject = CURRICULUM[subject_key]
     detail = "详细深入" if level == "detail" else "简洁易懂"
+    lesson_name = data.get("lesson_name", "")
 
-    prompt = f"""请用{detail}的方式为小学五年级学生讲解以下{subject['name']}知识点：
+    # 尝试获取PDF课本原文作为上下文
+    pdf_context = ""
+    if lesson_name:
+        try:
+            pdf_result = search_lesson_in_pdf(subject_key, lesson_name)
+            if pdf_result.get("text"):
+                pdf_context = pdf_result["text"][:3000]  # 限制长度
+        except Exception:
+            pass
+
+    if pdf_context:
+        prompt = f"""以下是课本原文：
+{pdf_context}
+
+请对照课本原文，用{detail}的方式为小学五年级学生讲解以下{subject['name']}知识点：
+
+【{topic}】
+
+要求：
+1. 语言生动活泼，贴近小学生的理解能力
+2. 结合课本原文内容进行讲解，引用原文中的关键段落
+3. 先简单介绍是什么，再用例子说明
+4. 给出2-3个记忆小技巧或口诀
+5. 最后提示容易犯的错误
+
+请直接开始讲解，不需要开场白。"""
+    else:
+        prompt = f"""请用{detail}的方式为小学五年级学生讲解以下{subject['name']}知识点：
 
 【{topic}】
 
@@ -457,6 +528,18 @@ def api_explain():
         return jsonify({"content": resp.choices[0].message.content})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/lesson_text", methods=["POST"])
+def api_lesson_text():
+    """从PDF中提取课文原文"""
+    data = request.json
+    subject = data.get("subject", "yuwen")
+    lesson_name = data.get("lesson_name", "")
+    try:
+        result = search_lesson_in_pdf(subject, lesson_name)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"text": "", "pages": [], "error": str(e)})
 
 @app.route("/api/stats", methods=["GET"])
 def api_stats():

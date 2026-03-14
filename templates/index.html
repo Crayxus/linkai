@@ -116,14 +116,28 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg)
 .learn-hdr{background:var(--card);padding:12px 20px;border-bottom:1px solid #e8ecf0;
   display:flex;align-items:center;gap:12px}
 .learn-body{flex:1;overflow-y:auto;padding:20px}
+.learn-columns{display:flex;gap:20px;margin-bottom:14px}
+.learn-col-left{flex:1;min-width:0}
+.learn-col-right{flex:1;min-width:0}
+.learn-col-left .col-header,.learn-col-right .col-header{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.pdf-text-box{background:#fffef5;border:1px solid #f0e6c0;border-radius:14px;padding:22px;
+  line-height:2;font-size:14px;white-space:pre-wrap;min-height:100px;max-height:70vh;overflow-y:auto;color:#4a4a3a}
+.pdf-text-box .pdf-pages-info{font-size:11px;color:var(--light);margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #e0d8c0}
 .explain-box{background:var(--card);border-radius:14px;padding:22px;box-shadow:var(--shadow);
-  line-height:1.9;font-size:14px;white-space:pre-wrap;min-height:100px}
+  line-height:1.9;font-size:14px;min-height:100px}
+.explain-box h1,.explain-box h2,.explain-box h3{margin:12px 0 6px;color:var(--purple)}
+.explain-box h3{font-size:15px}.explain-box h2{font-size:17px}.explain-box h1{font-size:19px}
+.explain-box ul,.explain-box ol{padding-left:20px;margin:6px 0}
+.explain-box li{margin-bottom:4px}
+.explain-box strong{color:var(--text);font-weight:700}
+.explain-box p{margin-bottom:8px}
 .explain-loading{color:var(--light);text-align:center;padding:40px}
 .tts-bar{margin-top:12px;display:flex;align-items:center;gap:10px}
 .tts-btn{background:linear-gradient(135deg,#11998e,#38ef7d);border:none;color:#fff;
   padding:8px 20px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
 .tts-btn:hover{opacity:.88}
 .tts-btn.speaking{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+@media(max-width:768px){.learn-columns{flex-direction:column}.learn-col-left,.learn-col-right{flex:none;width:100%}}
 
 /* ── CHALLENGE MODE ── */
 #pg-challenge{display:none;flex-direction:column;height:100%;background:var(--bg)}
@@ -384,10 +398,19 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg)
           <button class="tbtn" style="background:var(--purple);padding:8px 16px;border-radius:16px" onclick="doExplain('basic')">💡 简洁讲解</button>
           <button class="tbtn" style="background:var(--purple);padding:8px 16px;border-radius:16px" onclick="doExplain('detail')">📚 详细讲解</button>
         </div>
-        <div class="explain-box" id="explain-box"><span class="empty" style="padding:20px">点击上方按钮，AI老师来讲解这节课的知识点 👆</span></div>
-        <div class="tts-bar" id="tts-bar" style="display:none">
-          <button class="tts-btn" id="tts-btn" onclick="ttsToggle()">🔊 朗读内容</button>
-          <span style="font-size:12px;color:var(--light)">🎤 云溪音色</span>
+        <div class="learn-columns" id="learn-columns">
+          <div class="learn-col-left" id="learn-col-left" style="display:none">
+            <div class="col-header">📖 课本原文</div>
+            <div class="pdf-text-box" id="pdf-text-box"></div>
+          </div>
+          <div class="learn-col-right" id="learn-col-right">
+            <div class="col-header">🤖 AI讲解</div>
+            <div class="explain-box" id="explain-box"><span class="empty" style="padding:20px">点击上方按钮，AI老师来讲解这节课的知识点 👆</span></div>
+            <div class="tts-bar" id="tts-bar" style="display:none">
+              <button class="tts-btn" id="tts-btn" onclick="ttsToggle()">🔊 朗读内容</button>
+              <span style="font-size:12px;color:var(--light)">🎤 云溪音色</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -758,7 +781,58 @@ function showLearn() {
   document.getElementById("learn-kp").innerHTML = `<h4>🎯 知识点</h4><ul class="kp-list">${kps.map(k=>`<li>${k}</li>`).join("")}</ul>`;
   document.getElementById("explain-box").innerHTML = '<span class="empty" style="padding:20px">点击上方按钮，AI老师来讲解 👆</span>';
   document.getElementById("tts-bar").style.display = "none";
+  // 隐藏左栏，等加载完再显示
+  document.getElementById("learn-col-left").style.display = "none";
   showPage("learn");
+  // 异步加载课本原文
+  if (currentLesson?.name && currentSubject) {
+    fetch("/api/lesson_text", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({subject:currentSubject, lesson_name:currentLesson.name})
+    }).then(r=>r.json()).then(d => {
+      const leftCol = document.getElementById("learn-col-left");
+      const pdfBox = document.getElementById("pdf-text-box");
+      if (d.text && d.text.trim()) {
+        let pagesInfo = d.pages?.length ? '<div class="pdf-pages-info">课本第 ' + d.pages.join(", ") + ' 页</div>' : '';
+        pdfBox.innerHTML = pagesInfo + escHtml(d.text);
+        leftCol.style.display = "block";
+      } else {
+        leftCol.style.display = "none";
+      }
+    }).catch(() => {
+      document.getElementById("learn-col-left").style.display = "none";
+    });
+  }
+}
+
+function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function simpleMarkdown(text) {
+  // 转义HTML
+  let h = escHtml(text);
+  // headers: ### → h3, ## → h2, # → h1
+  h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  // bold: **text**
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // italic: *text*
+  h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // unordered list: - item
+  h = h.replace(/^- (.+)$/gm, '<li>$1</li>');
+  h = h.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  // ordered list: 1. item
+  h = h.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  // inline code
+  h = h.replace(/`(.+?)`/g, '<code style="background:#f0f4ff;padding:1px 4px;border-radius:3px;font-size:13px">$1</code>');
+  // paragraphs: double newline
+  h = h.replace(/\n\n/g, '</p><p>');
+  // single newlines within paragraphs
+  h = h.replace(/\n/g, '<br>');
+  h = '<p>' + h + '</p>';
+  // cleanup empty paragraphs
+  h = h.replace(/<p>\s*<\/p>/g, '');
+  return h;
 }
 
 async function doExplain(level) {
@@ -768,18 +842,20 @@ async function doExplain(level) {
   try {
     const r = await fetch("/api/explain", {
       method:"POST", headers:{"Content-Type":"application/json","X-API-Key":apiKey},
-      body: JSON.stringify({subject:currentSubject, topic:currentLesson.name+(currentLesson.key_points?" - "+currentLesson.key_points.join("，"):""), level})
+      body: JSON.stringify({subject:currentSubject, topic:currentLesson.name+(currentLesson.key_points?" - "+currentLesson.key_points.join("，"):""), level, lesson_name:currentLesson.name})
     });
-    if (!r.ok) { box.textContent = "服务器错误（" + r.status + "），请稍后重试"; return; }
+    if (!r.ok) { box.innerHTML = "服务器错误（" + r.status + "），请稍后重试"; return; }
     const text = await r.text();
-    let d; try { d = JSON.parse(text); } catch { box.textContent = "服务器返回异常，请稍后重试"; return; }
-    box.textContent = d.content || d.error || "讲解失败";
+    let d; try { d = JSON.parse(text); } catch { box.innerHTML = "服务器返回异常，请稍后重试"; return; }
     if (d.content) {
+      box.innerHTML = simpleMarkdown(d.content);
       document.getElementById("tts-bar").style.display = "flex";
       const btn = document.getElementById("tts-btn");
       btn.classList.remove("speaking"); btn.textContent = "🔊 朗读内容";
+    } else {
+      box.innerHTML = escHtml(d.error || "讲解失败");
     }
-  } catch(e) { box.textContent = "请求失败：" + e.message; }
+  } catch(e) { box.innerHTML = "请求失败：" + escHtml(e.message); }
 }
 
 // ══════════════════════════════════════════════════════════════
