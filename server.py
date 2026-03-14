@@ -8,10 +8,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"),
             static_folder=os.path.join(BASE_DIR, "static"))
 
-# ─── Doubao API 配置 ───────────────────────────────────────────────
-DOUBAO_API_KEY = "9fb81ccb-ed98-496e-8819-7f6ee7c54abb"
-DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
-DOUBAO_MODEL = "ep-m-20260302154635-vgxz5"
+# ─── DeepSeek API 配置 ─────────────────────────────────────────────
+API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-276a520fe06a4d12a5480b20ea8ee1d7")
+API_BASE_URL = "https://api.deepseek.com"
+API_MODEL = "deepseek-chat"
 
 # ─── PDF文本缓存 ───────────────────────────────────────────────────
 PDF_FILES = {
@@ -161,10 +161,10 @@ def api_delete_wrong(wid):
     return jsonify({"ok": True})
 
 def _get_client():
-    key = DOUBAO_API_KEY or request.headers.get("X-API-Key", "")
+    key = API_KEY or request.headers.get("X-API-Key", "")
     if not key:
-        return None, "未配置Doubao API Key，请在启动时设置环境变量 DOUBAO_API_KEY"
-    client = OpenAI(api_key=key, base_url=DOUBAO_BASE_URL)
+        return None, "未配置 DeepSeek API Key"
+    client = OpenAI(api_key=key, base_url=API_BASE_URL)
     return client, None
 
 def _build_teacher_system(subject_key, lesson_info):
@@ -204,7 +204,7 @@ def api_chat():
     def generate():
         try:
             stream = client.chat.completions.create(
-                model=DOUBAO_MODEL,
+                model=API_MODEL,
                 messages=full_messages,
                 stream=True,
                 max_tokens=2000,
@@ -278,7 +278,7 @@ def api_quiz():
 
     try:
         resp = client.chat.completions.create(
-            model=DOUBAO_MODEL,
+            model=API_MODEL,
             messages=[
                 {"role": "system", "content": "你是小学出题老师。只输出合法JSON对象，禁止输出任何其他文字。所有选项必须是非空的文字内容。"},
                 {"role": "user", "content": prompt}
@@ -405,7 +405,7 @@ def api_exam():
 
     try:
         resp = client.chat.completions.create(
-            model=DOUBAO_MODEL,
+            model=API_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=4000,
             temperature=0.7,
@@ -447,7 +447,7 @@ def api_explain():
 
     try:
         resp = client.chat.completions.create(
-            model=DOUBAO_MODEL,
+            model=API_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1500,
             temperature=0.7,
@@ -548,10 +548,11 @@ def api_daily_plan():
 
 @app.route("/api/config", methods=["GET"])
 def api_config():
-    key = DOUBAO_API_KEY or request.headers.get("X-API-Key", "")
+    key = API_KEY or request.headers.get("X-API-Key", "")
     return jsonify({
         "api_configured": bool(key),
-        "model": DOUBAO_MODEL,
+        "model": API_MODEL,
+        "provider": "deepseek",
     })
 
 @app.route("/api/config", methods=["POST"])
@@ -559,10 +560,26 @@ def api_set_config():
     # API Key和模型已硬编码，前端无需覆盖
     return jsonify({"ok": True})
 
+def _split_lang_segments(text):
+    """将混合文本按中英文分段，返回 [(segment, 'en'|'zh'), ...]"""
+    segments = []
+    # 按连续中文 或 连续非中文 分组
+    for m in re.finditer(r'([\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+|[^\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+)', text):
+        seg = m.group().strip()
+        if not seg:
+            continue
+        has_zh = bool(re.search(r'[\u4e00-\u9fff]', seg))
+        segments.append((seg, 'zh' if has_zh else 'en'))
+    return segments
+
+
 @app.route("/api/tts", methods=["POST"])
 def api_tts():
-    """用edge-tts生成云溪语音，返回mp3音频流"""
+    """用edge-tts生成语音，支持中英混合文本，走本地代理"""
     import edge_tts
+    # 让 edge_tts 通过 v2ray socks5 代理访问微软服务
+    os.environ.setdefault("ALL_PROXY", "socks5://127.0.0.1:10809")
+
     data = request.json
     text = (data.get("text") or "").strip()
     if not text:
@@ -570,35 +587,53 @@ def api_tts():
     if len(text) > 3000:
         text = text[:3000]
 
-    # 接收前端指定voice，或自动检测
-    voice_param = (data.get("voice") or "").strip()
-
     # 去掉markdown符号、书名号和下划线
     text = re.sub(r'###?\s*', '', text)
     text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
     text = re.sub(r'\*(.+?)\*', r'\1', text)
     text = re.sub(r'`(.+?)`', r'\1', text)
-    text = re.sub(r'_+', '，', text)   # 下划线（填空横线）替换为停顿
-    text = text.replace('《', '').replace('》', '')  # 书名号TTS会念"书名号左/右"
+    text = re.sub(r'_+', '，', text)
+    text = text.replace('《', '').replace('》', '')
 
-    # 自动检测：英文字符占比超50%则用英文voice
+    # 接收前端指定voice
+    voice_param = (data.get("voice") or "").strip()
+
+    # 整体语言判断（用于单voice场景）
     en_chars = len(re.findall(r'[a-zA-Z]', text))
     total_chars = max(len(re.sub(r'\s', '', text)), 1)
-    if voice_param:
-        voice = voice_param
-    elif en_chars / total_chars > 0.5:
-        voice = "en-US-GuyNeural"
-    else:
-        voice = "zh-CN-YunxiNeural"
+    is_mixed = bool(re.search(r'[\u4e00-\u9fff]', text)) and en_chars > 0
 
-    # 缓存：相同文本+voice不重复生成
-    cache_key = hashlib.md5(f"{voice}:{text}".encode()).hexdigest()
+    # 缓存key
+    cache_key = hashlib.md5(f"v2:{voice_param}:{text}".encode()).hexdigest()
     cache_path = os.path.join(BASE_DIR, "data", f"tts_{cache_key}.mp3")
 
     if not os.path.exists(cache_path):
         async def _gen():
-            c = edge_tts.Communicate(text, voice=voice, rate="-5%")
-            await c.save(cache_path)
+            # 混合文本：分段合成再拼接
+            if not voice_param and is_mixed:
+                parts = []
+                for seg, lang in _split_lang_segments(text):
+                    v = "en-US-GuyNeural" if lang == 'en' else "zh-CN-YunxiNeural"
+                    tmp = cache_path + f".{len(parts)}.mp3"
+                    c = edge_tts.Communicate(seg, voice=v, rate="-5%")
+                    await c.save(tmp)
+                    parts.append(tmp)
+                # 拼接所有片段
+                with open(cache_path, 'wb') as out:
+                    for p in parts:
+                        with open(p, 'rb') as f:
+                            out.write(f.read())
+                        os.remove(p)
+            else:
+                if voice_param:
+                    voice = voice_param
+                elif en_chars / total_chars > 0.5:
+                    voice = "en-US-GuyNeural"
+                else:
+                    voice = "zh-CN-YunxiNeural"
+                c = edge_tts.Communicate(text, voice=voice, rate="-5%")
+                await c.save(cache_path)
+
         asyncio.run(_gen())
 
     return send_file(cache_path, mimetype="audio/mpeg", as_attachment=False)
@@ -729,7 +764,7 @@ def api_targeted_quiz():
 
     try:
         resp = client.chat.completions.create(
-            model=DOUBAO_MODEL,
+            model=API_MODEL,
             messages=[
                 {"role": "system", "content": "你是小学出题老师。只输出合法JSON对象，禁止输出任何其他文字。"},
                 {"role": "user", "content": prompt}
@@ -774,5 +809,4 @@ if __name__ == "__main__":
     print("LinkAI 智能学习系统启动中...")
     print("已加载三科教材：语文 / 数学 / 英语")
     print("访问地址: http://localhost:5055")
-    port = int(os.environ.get("PORT", 5055))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=5055, debug=False)
