@@ -789,28 +789,27 @@ let _audio = null, _ttsActive = false;
 
 function ttsStop() {
   if (_audio) { _audio.pause(); _audio.src=""; _audio=null; }
+  if (window.speechSynthesis) { speechSynthesis.cancel(); }
   _ttsActive = false;
   const btn = document.getElementById("tts-btn");
   if (btn) { btn.classList.remove("speaking"); btn.textContent = "🔊 朗读内容"; }
 }
 
 async function ttsToggle() {
-  if (_ttsActive && _audio && !_audio.paused) { ttsStop(); return; }
+  const btn = document.getElementById("tts-btn");
+  if (_ttsActive) { ttsStop(); return; }
   const text = document.getElementById("explain-box")?.textContent;
   if (!text || text.length < 5) return;
-  const btn = document.getElementById("tts-btn");
-  btn.textContent = "⏳ 生成中..."; btn.classList.add("speaking");
-  try {
-    const r = await fetch("/api/tts", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:text.slice(0,3000)})});
-    if (!r.ok) throw new Error("TTS失败");
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    _audio = new Audio(url);
-    _ttsActive = true;
-    _audio.onplay = () => { btn.classList.add("speaking"); btn.textContent = "⏹ 停止朗读"; };
-    _audio.onended = _audio.onerror = () => { ttsStop(); URL.revokeObjectURL(url); };
-    _audio.play();
-  } catch(e) { ttsStop(); console.error(e); }
+  const clean = _cleanTtsText(text);
+  if (!clean) return;
+  if (!window.speechSynthesis) { alert("浏览器不支持语音朗读"); return; }
+  const utter = new SpeechSynthesisUtterance(clean.slice(0, 3000));
+  utter.lang = "zh-CN"; utter.rate = 0.95;
+  _ttsActive = true;
+  btn.classList.add("speaking"); btn.textContent = "⏹ 停止朗读";
+  utter.onend = utter.onerror = () => { ttsStop(); };
+  window._speechUtter = utter;
+  speechSynthesis.speak(utter);
 }
 
 function _cleanTtsText(text) {
@@ -824,24 +823,20 @@ function _cleanTtsText(text) {
 }
 
 async function ttsSpeakText(text, btn) {
-  // 如果正在播同一内容则停止，否则停旧的开新的
-  if (_ttsActive && _audio && !_audio.paused) { ttsStop(); }
+  if (_ttsActive) { ttsStop(); }
   if (!text || text.length < 2) return;
   const cleanText = _cleanTtsText(text);
   if (!cleanText) return;
-  if (btn) { btn.textContent = "⏳"; }
-  try {
-    const r = await fetch("/api/tts", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:cleanText.slice(0,1000)})});
-    if (!r.ok) { if(btn) btn.textContent="🔊"; return; }
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    if (_audio) { _audio.pause(); _audio.src=""; }
-    _audio = new Audio(url);
-    _ttsActive = true;
-    if (btn) { btn.textContent = "⏹"; }
-    _audio.onended = _audio.onerror = () => { _ttsActive=false; if(btn)btn.textContent="🔊"; URL.revokeObjectURL(url); };
-    _audio.play();
-  } catch(e) { _ttsActive=false; if(btn)btn.textContent="🔊"; }
+  if (!window.speechSynthesis) return;
+  const utter = new SpeechSynthesisUtterance(cleanText.slice(0, 1000));
+  // 检测是否英文为主
+  const enRatio = (cleanText.match(/[a-zA-Z]/g)||[]).length / Math.max(cleanText.replace(/\s/g,'').length, 1);
+  utter.lang = enRatio > 0.5 ? "en-US" : "zh-CN";
+  utter.rate = 0.95;
+  _ttsActive = true;
+  if (btn) { btn.textContent = "⏹"; }
+  utter.onend = utter.onerror = () => { _ttsActive=false; if(btn)btn.textContent="🔊"; };
+  speechSynthesis.speak(utter);
 }
 
 // ══════════════════════════════════════════════════════════════
