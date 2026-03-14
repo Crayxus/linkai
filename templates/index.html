@@ -788,7 +788,7 @@ function showLearn() {
   if (currentLesson?.name && currentSubject) {
     fetch("/api/lesson_text", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({subject:currentSubject, lesson_name:currentLesson.name, key_points:currentLesson.key_points||[], poems:currentLesson.poems||[]})
+      body: JSON.stringify({subject:currentSubject, lesson_name:currentLesson.name, key_points:currentLesson.key_points||[], poems:currentLesson.poems||[], unit_name:currentUnit?.name||""})
     }).then(r=>r.json()).then(d => {
       const leftCol = document.getElementById("learn-col-left");
       const pdfBox = document.getElementById("pdf-text-box");
@@ -842,7 +842,7 @@ async function doExplain(level) {
   try {
     const r = await fetch("/api/explain", {
       method:"POST", headers:{"Content-Type":"application/json","X-API-Key":apiKey},
-      body: JSON.stringify({subject:currentSubject, topic:currentLesson.name+(currentLesson.key_points?" - "+currentLesson.key_points.join("，"):""), level, lesson_name:currentLesson.name, key_points:currentLesson.key_points||[], poems:currentLesson.poems||[]})
+      body: JSON.stringify({subject:currentSubject, topic:currentLesson.name+(currentLesson.key_points?" - "+currentLesson.key_points.join("，"):""), level, lesson_name:currentLesson.name, key_points:currentLesson.key_points||[], poems:currentLesson.poems||[], unit_name:currentUnit?.name||""})
     });
     if (!r.ok) { box.innerHTML = "服务器错误（" + r.status + "），请稍后重试"; return; }
     const text = await r.text();

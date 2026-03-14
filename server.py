@@ -97,27 +97,62 @@ def clean_pdf_text(text, subject):
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
 
-def search_lesson_in_pdf(subject, lesson_name, key_points=None):
-    """在PDF中搜索课文名，返回 {text, pages}。用key_points消歧"""
+def search_lesson_in_pdf(subject, lesson_name, key_points=None, unit_name=None):
+    """在PDF中搜索课文名，返回 {text, pages}。支持多种搜索策略"""
     pages = get_pdf_pages(subject)
-    if not pages or not lesson_name:
+    if not pages:
         return {"text": "", "pages": []}
 
-    # 第一步：找包含课文名的非目录页
+    # 构建搜索关键词列表（按优先级）
+    search_terms = []
+    if lesson_name:
+        search_terms.append(lesson_name)
+    if unit_name:
+        search_terms.append(unit_name)
+    # 从key_points中提取搜索词
+    if key_points:
+        for kp in key_points:
+            # 取知识点中的关键短语（去掉括号说明）
+            clean_kp = re.split(r'[（(]', kp)[0].strip()
+            if len(clean_kp) >= 2:
+                search_terms.append(clean_kp)
+
+    if not search_terms:
+        return {"text": "", "pages": []}
+
+    # 第一步：用课文名精确搜索非目录页
     candidates = []
     for pnum, ptxt in pages:
         if _is_toc_page(ptxt): continue
-        if lesson_name in ptxt:
+        if lesson_name and lesson_name in ptxt:
             candidates.append((pnum, ptxt))
 
-    # 第二步：如果有多个候选区域（同名课文），用key_points消歧
+    # 第二步：如果课文名没找到，用unit_name和key_points搜索
+    if not candidates:
+        for pnum, ptxt in pages:
+            if _is_toc_page(ptxt): continue
+            score = 0
+            for term in search_terms:
+                if term in ptxt:
+                    score += 1
+            if score >= 2:  # 至少匹配2个关键词
+                candidates.append((pnum, ptxt))
+        # 如果还没找到，降低到1个关键词匹配
+        if not candidates:
+            for pnum, ptxt in pages:
+                if _is_toc_page(ptxt): continue
+                for term in search_terms[:3]:  # 只用前3个最重要的词
+                    if term in ptxt and len(ptxt) > 100:
+                        candidates.append((pnum, ptxt))
+                        break
+
+    # 第三步：如果有多个候选，用key_points打分消歧
     if len(candidates) > 3 and key_points:
         scored = []
         for pnum, ptxt in candidates:
             score = sum(1 for kp in key_points if kp in ptxt)
             scored.append((score, pnum, ptxt))
         scored.sort(reverse=True)
-        # 取得分最高的那组连续页
         if scored[0][0] > 0:
             best_page = scored[0][1]
             candidates = [(pnum, ptxt) for pnum, ptxt in candidates if abs(pnum - best_page) <= 3]
@@ -125,7 +160,7 @@ def search_lesson_in_pdf(subject, lesson_name, key_points=None):
     if not candidates:
         return {"text": "", "pages": []}
 
-    # 第三步：从第一个匹配页开始，取连续的2-3页
+    # 第四步：从第一个匹配页开始，取连续的2-3页
     first_page = candidates[0][0]
     matched_pages = []
     matched_texts = []
@@ -567,7 +602,7 @@ def api_explain():
     pdf_context = ""
     if lesson_name:
         try:
-            pdf_result = search_lesson_in_pdf(subject_key, lesson_name, key_points=key_points)
+            pdf_result = search_lesson_in_pdf(subject_key, lesson_name, key_points=key_points, unit_name=data.get("unit_name",""))
             if pdf_result.get("text"):
                 pdf_context = pdf_result["text"][:3000]
         except Exception:
@@ -621,7 +656,8 @@ def api_lesson_text():
     lesson_name = data.get("lesson_name", "")
     key_points = data.get("key_points", [])
     try:
-        result = search_lesson_in_pdf(subject, lesson_name, key_points=key_points)
+        unit_name = data.get("unit_name", "")
+        result = search_lesson_in_pdf(subject, lesson_name, key_points=key_points, unit_name=unit_name)
         return jsonify(result)
     except Exception as e:
         return jsonify({"text": "", "pages": [], "error": str(e)})
