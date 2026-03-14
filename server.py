@@ -452,12 +452,23 @@ def api_quiz():
     poems = data.get("poems", [])
     poems_str = f"\n本课包含的篇目：{'、'.join(poems)}" if poems else ""
 
+    # 获取课本原文作为出题依据
+    pdf_context = ""
+    try:
+        pdf_result = search_lesson_in_pdf(subject_key, lesson_name, key_points=lesson_key_points, unit_name=data.get("unit_name",""))
+        if pdf_result.get("text"):
+            pdf_context = pdf_result["text"][:2500]
+    except Exception:
+        pass
+
+    pdf_section = f"\n\n以下是课本原文，必须严格基于此内容出题：\n{pdf_context}" if pdf_context else ""
+
     prompt = f"""出{count}道小学五年级下册（人教版）{subject['name']}选择题。
 课程：{lesson_name}
-考查知识点：{kp_str}{poems_str}
+考查知识点：{kp_str}{poems_str}{pdf_section}
 
-严格要求：所有题目必须且只能围绕【{lesson_name}】这一课的内容出题。
-绝对不能出其他课文、其他单元、其他年级的内容！
+严格要求：所有题目必须且只能基于上述课本原文和知识点出题。
+绝对不能出课本原文中没有的诗句、课文或知识点！
 重要规则：
 1. 只出纯文字题——选项必须是完整的文字描述，绝对不能为空、不能用图形符号代替
 2. 不出"看到的图形是（）"之类需要展示图形才能作答的题；改出考查概念/定义/规则/数量/特征的文字题
