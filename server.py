@@ -54,6 +54,36 @@ def get_pdf_pages(subject):
     except Exception:
         return []
 
+def clean_pdf_text(text, subject):
+    """清理PDF提取的原始文本，修复格式问题"""
+    lines = text.split('\n')
+    if subject == 'yuwen':
+        # 移除拼音标注行（纯拉丁字母），并拼接前后行
+        cleaned = []
+        skip_next_join = False
+        for line in lines:
+            stripped = line.strip()
+            if re.match(r'^[a-zA-Zāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]{1,12}$', stripped):
+                if cleaned: skip_next_join = True
+                continue
+            if re.match(r'^[①②③④⑤⑥⑦⑧⑨⑩\s]+$', stripped): continue
+            if re.match(r'^\d{1,3}$', stripped): continue
+            # 移除末尾散落的生字行（连续单字无标点，如"昼耘供稚漪"）
+            if re.match(r'^[\u4e00-\u9fff]{2,10}$', stripped) and len(stripped) >= 3 and not any(c in stripped for c in '，。、：；！？'):
+                continue
+            if skip_next_join and cleaned and stripped:
+                cleaned[-1] = cleaned[-1] + stripped
+                skip_next_join = False
+            else:
+                cleaned.append(line)
+                skip_next_join = False
+        lines = cleaned
+    elif subject in ('shuxue', 'yingyu'):
+        lines = [l for l in lines if not re.match(r'^\d{1,3}\s*$', l.strip())]
+    text = '\n'.join(lines)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
 def search_lesson_in_pdf(subject, lesson_name):
     """在PDF中搜索课文名，返回 {text, pages}"""
     pages = get_pdf_pages(subject)
@@ -76,7 +106,10 @@ def search_lesson_in_pdf(subject, lesson_name):
                     matched_texts.append(ptxt)
     if not matched_pages:
         return {"text": "", "pages": []}
-    return {"text": "\n\n".join(matched_texts), "pages": matched_pages}
+    # 清理文本格式
+    combined = "\n\n".join(matched_texts)
+    cleaned = clean_pdf_text(combined, subject)
+    return {"text": cleaned, "pages": matched_pages}
 
 # ─── SQLite 学习记录 ───────────────────────────────────────────────
 DB_PATH = os.path.join(BASE_DIR, "data", "study.db")
