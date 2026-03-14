@@ -2,4 +2,4 @@ __pycache__/
 *.pyc
 data/
 *.log
-*.pdf
+# *.pdf  # 课本PDF需要上传到Render
