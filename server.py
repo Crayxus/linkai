@@ -2,11 +2,13 @@ import os, json, sqlite3, fitz, re, asyncio, hashlib, tempfile, math
 from collections import defaultdict
 from flask import Flask, request, jsonify, render_template, Response, stream_with_context, send_file
 from openai import OpenAI
+from flask_cors import CORS
 from curriculum import CURRICULUM
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, "templates"),
             static_folder=os.path.join(BASE_DIR, "static"))
+CORS(app)
 
 # ─── DeepSeek API 配置 ─────────────────────────────────────────────
 API_KEY = os.environ.get("DEEPSEEK_API_KEY", "sk-276a520fe06a4d12a5480b20ea8ee1d7")
