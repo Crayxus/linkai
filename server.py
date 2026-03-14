@@ -577,10 +577,8 @@ def _split_lang_segments(text):
 
 @app.route("/api/tts", methods=["POST"])
 def api_tts():
-    """用edge-tts生成语音，支持中英混合文本，走本地代理"""
+    """用edge-tts生成语音，支持中英混合文本"""
     import edge_tts
-    # 让 edge_tts 通过 v2ray socks5 代理访问微软服务
-    os.environ.setdefault("ALL_PROXY", "socks5://127.0.0.1:10809")
 
     data = request.json
     text = (data.get("text") or "").strip()
