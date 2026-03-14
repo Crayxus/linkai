@@ -54,9 +54,11 @@ def get_pdf_pages(subject):
     except Exception:
         return []
 
-def _is_toc_page(text):
-    """判断是否是目录页（包含大量省略号+页码模式）"""
-    return len(re.findall(r'[…·.]{3,}\s*\d+', text)) >= 3
+def _is_toc_or_front_page(pnum, text):
+    """判断是否是目录/前言/版权页（应跳过）"""
+    if pnum <= 6: return True  # 前6页通常是封面/版权/前言/目录
+    if len(re.findall(r'[…·.]{3,}\s*\d+', text)) >= 3: return True  # 目录页
+    return False
 
 def clean_pdf_text(text, subject):
     """清理PDF提取的原始文本，修复格式问题"""
@@ -103,18 +105,38 @@ def search_lesson_in_pdf(subject, lesson_name, key_points=None, unit_name=None):
     if not pages:
         return {"text": "", "pages": []}
 
+    # 数字→英文映射（用于英语课本Unit One/Two...）
+    _NUM_EN = {'1':'One','2':'Two','3':'Three','4':'Four','5':'Five','6':'Six'}
+
     # 构建搜索关键词列表（按优先级）
     search_terms = []
     if lesson_name:
         search_terms.append(lesson_name)
     if unit_name:
         search_terms.append(unit_name)
-    # 从key_points中提取搜索词
+        # 英语Unit处理："Unit 1: My Day" → 加 "Unit One", "My Day"
+        um = re.match(r'Unit\s+(\d+)[:\s]*(.*)', unit_name, re.IGNORECASE)
+        if um:
+            num_en = _NUM_EN.get(um.group(1), '')
+            if num_en:
+                search_terms.append(f'Unit {num_en}')
+            theme = um.group(2).strip().rstrip('?!')
+            if theme and len(theme) >= 3:
+                search_terms.append(theme)
+        else:
+            # 中文单元名，提取关键部分
+            for sep in ['·', '：', ':', '—']:
+                if sep in unit_name:
+                    for p in unit_name.split(sep):
+                        p = p.strip()
+                        if len(p) >= 2 and not re.match(r'^第[一二三四五六七八九十\d]+单元$', p):
+                            search_terms.append(p)
+    # 从key_points中提取有效搜索词
     if key_points:
         for kp in key_points:
-            # 取知识点中的关键短语（去掉括号说明）
             clean_kp = re.split(r'[（(]', kp)[0].strip()
-            if len(clean_kp) >= 2:
+            # 只用较长的中文知识点作搜索词，跳过太短或纯英文描述的
+            if re.search(r'[\u4e00-\u9fff]{3,}', clean_kp):
                 search_terms.append(clean_kp)
 
     if not search_terms:
@@ -123,14 +145,14 @@ def search_lesson_in_pdf(subject, lesson_name, key_points=None, unit_name=None):
     # 第一步：用课文名精确搜索非目录页
     candidates = []
     for pnum, ptxt in pages:
-        if _is_toc_page(ptxt): continue
+        if _is_toc_or_front_page(pnum, ptxt): continue
         if lesson_name and lesson_name in ptxt:
             candidates.append((pnum, ptxt))
 
     # 第二步：如果课文名没找到，用unit_name和key_points搜索
     if not candidates:
         for pnum, ptxt in pages:
-            if _is_toc_page(ptxt): continue
+            if _is_toc_or_front_page(pnum, ptxt): continue
             score = 0
             for term in search_terms:
                 if term in ptxt:
@@ -140,7 +162,7 @@ def search_lesson_in_pdf(subject, lesson_name, key_points=None, unit_name=None):
         # 如果还没找到，降低到1个关键词匹配
         if not candidates:
             for pnum, ptxt in pages:
-                if _is_toc_page(ptxt): continue
+                if _is_toc_or_front_page(pnum, ptxt): continue
                 for term in search_terms[:3]:  # 只用前3个最重要的词
                     if term in ptxt and len(ptxt) > 100:
                         candidates.append((pnum, ptxt))
@@ -160,13 +182,13 @@ def search_lesson_in_pdf(subject, lesson_name, key_points=None, unit_name=None):
     if not candidates:
         return {"text": "", "pages": []}
 
-    # 第四步：从第一个匹配页开始，取连续的2-3页
+    # 第四步：从第一个匹配页开始，取连续的1-2页
     first_page = candidates[0][0]
     matched_pages = []
     matched_texts = []
     for pnum, ptxt in pages:
-        if _is_toc_page(ptxt): continue
-        if first_page <= pnum <= first_page + 2:
+        if _is_toc_or_front_page(pnum, ptxt): continue
+        if first_page <= pnum <= first_page + 1:
             matched_pages.append(pnum)
             matched_texts.append(ptxt)
 
